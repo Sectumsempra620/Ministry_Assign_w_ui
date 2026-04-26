@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Schedule</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f6f0e3;
+            --panel: rgba(255, 252, 245, 0.94);
+            --panel-strong: #fffaf0;
+            --border: #decaa3;
+            --text: #2d2215;
+            --muted: #6f5c43;
+            --accent: #8d5f2f;
+            --accent-dark: #6f491f;
+            --shadow: 0 18px 40px rgba(92, 67, 29, 0.12);
+        }
+
+        body {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(199, 162, 92, 0.18), transparent 28%),
+                linear-gradient(180deg, #efe3c9 0%, var(--bg) 38%, #fdfaf4 100%);
+            min-height: 100vh;
+            padding: 28px 18px 42px;
+        }
+
+        .page {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .hero,
+        .selector-card,
+        .schedule-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero {
+            padding: 30px;
+            margin-bottom: 22px;
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            font-size: clamp(2rem, 4vw, 3.1rem);
+            line-height: 1.05;
+        }
+
+        .hero p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.65;
+            max-width: 820px;
+        }
+
+        .selector-card,
+        .schedule-card {
+            padding: 24px;
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        select {
+            width: 100%;
+            max-width: 360px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            padding: 14px 15px;
+            font: inherit;
+            background: var(--panel-strong);
+            color: var(--text);
+        }
+
+        select:focus {
+            outline: 2px solid rgba(141, 95, 47, 0.18);
+            border-color: var(--accent);
+        }
+
+        .helper {
+            margin-top: 7px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .status {
+            padding: 14px 16px;
+            border-radius: 14px;
+            margin-top: 16px;
+            background: #fff4d7;
+            color: #735117;
+            line-height: 1.5;
+        }
+
+        .status.error {
+            background: #fce6e6;
+            color: #8f2c2c;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .summary-item {
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: #fffdf8;
+        }
+
+        .summary-item strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .schedule-card h2 {
+            margin: 0 0 16px;
+            font-size: 28px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background: #fffdf8;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 980px;
+        }
+
+        th,
+        td {
+            border-bottom: 1px solid #eadbbf;
+            border-right: 1px solid #eadbbf;
+            padding: 16px 14px;
+            vertical-align: top;
+        }
+
+        th:last-child,
+        td:last-child {
+            border-right: 0;
+        }
+
+        tr:last-child td {
+            border-bottom: 0;
+        }
+
+        th {
+            background: #f7eedb;
+            text-align: left;
+            font-size: 16px;
+        }
+
+        .role-col {
+            width: 220px;
+            min-width: 220px;
+            font-weight: 700;
+            background: #fcf6e8;
+        }
+
+        .date-label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .date-subtitle {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .name-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .name-chip {
+            display: inline-block;
+            width: fit-content;
+            max-width: 100%;
+            background: #f1e2c0;
+            border: 1px solid #d6ba83;
+            border-radius: 999px;
+            padding: 6px 10px;
+            line-height: 1.4;
+            font-size: 14px;
+        }
+
+        .name-chip small {
+            display: block;
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+        }
+
+        .empty-text {
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        .special-text {
+            color: var(--accent-dark);
+            font-weight: 700;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 20px 12px 28px;
+            }
+
+            .hero,
+            .selector-card,
+            .schedule-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <section class="hero">
+            <h1>Friday Service Schedule</h1>
+            <p>
+                This page shows the monthly Friday service roster for everyone in the church. Choose a month to see
+                each service role and the assigned people for every Friday.
+            </p>
+        </section>
+
+        <section class="selector-card">
+            <label for="monthSelect">Choose a month</label>
+            <select id="monthSelect">
+                <option value="">Loading months...</option>
+            </select>
+            <div class="helper">All created monthly forms are listed here. The table updates when you choose a month.</div>
+            <div id="status" class="status">Loading available months...</div>
+            <div id="summary" class="summary"></div>
+        </section>
+
+        <section class="schedule-card">
+            <h2>Schedule Table</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead id="scheduleHead"></thead>
+                    <tbody id="scheduleBody"></tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const API_BASE = `${window.location.origin.replace(":8001", ":8000")}/api/v1`;
+        let forms = [];
+        let roles = [];
+        let members = [];
+
+        function parseLocalDate(dateString) {
+            return new Date(`${dateString}T00:00:00`);
+        }
+
+        function formatMonth(dateString) {
+            return parseLocalDate(dateString).toLocaleDateString("en-US", {
+                month: "long",
+                year: "numeric"
+            });
+        }
+
+        function formatFriday(dateString) {
+            return parseLocalDate(dateString).toLocaleDateString("en-US", {
+                weekday: "short",
+                month: "short",
+                day: "numeric"
+            });
+        }
+
+        function setStatus(message, isError = false) {
+            const status = document.getElementById("status");
+            status.textContent = message;
+            status.className = isError ? "status error" : "status";
+        }
+
+        function renderSummary(form, serviceDates, schedules) {
+            const summary = document.getElementById("summary");
+            const assignedPeople = new Set(schedules.map((item) => item.member_id));
+            summary.innerHTML = `
+                <div class="summary-item">
+                    <strong>Month</strong>
+                    <span>${formatMonth(form.form_month)}</span>
+                </div>
+                <div class="summary-item">
+                    <strong>Status</strong>
+                    <span>${form.status}</span>
+                </div>
+                <div class="summary-item">
+                    <strong>Fridays</strong>
+                    <span>${serviceDates.length}</span>
+                </div>
+                <div class="summary-item">
+                    <strong>Assigned People</strong>
+                    <span>${assignedPeople.size}</span>
+                </div>
+            `;
+        }
+
+        function renderScheduleTable(form, serviceDates, schedules) {
+            const head = document.getElementById("scheduleHead");
+            const body = document.getElementById("scheduleBody");
+            const memberGroupById = Object.fromEntries(
+                members.map((member) => [member.member_id, member.bible_study_group])
+            );
+
+            head.innerHTML = `
+                <tr>
+                    <th class="role-col">Service Role</th>
+                    ${serviceDates.map((serviceDate) => `
+                        <th>
+                            <span class="date-label">${formatFriday(serviceDate.friday_date)}</span>
+                            <span class="date-subtitle">Week ${serviceDate.service_week}${serviceDate.notes ? ` • ${serviceDate.notes}` : ""}</span>
+                        </th>
+                    `).join("")}
+                </tr>
+            `;
+
+            body.innerHTML = roles.map((role) => {
+                const cells = serviceDates.map((serviceDate, index) => {
+                    const entries = schedules.filter((schedule) =>
+                        schedule.role_id === role.role_id && schedule.service_week === serviceDate.service_week
+                    );
+
+                    let content = "";
+                    if (entries.length > 0) {
+                        content = `
+                            <div class="name-list">
+                                ${entries.map((entry) => {
+                                    const groupLabel = memberGroupById[entry.member_id]
+                                        ? memberGroupById[entry.member_id].replace("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
+                                        : null;
+
+                                    return `
+                                        <span class="name-chip">
+                                            ${entry.member_name}
+                                            ${role.role_name === "Bible Study Leader" && groupLabel ? `<small>${groupLabel}</small>` : ""}
+                                        </span>
+                                    `;
+                                }).join("")}
+                            </div>
+                        `;
+                    } else if (index === 0 && role.role_name === "Worship Leader") {
+                        content = `<span class="special-text">Other fellowship</span>`;
+                    } else {
+                        content = `<span class="empty-text">—</span>`;
+                    }
+
+                    return `<td>${content}</td>`;
+                }).join("");
+
+                return `
+                    <tr>
+                        <td class="role-col">${role.role_name}</td>
+                        ${cells}
+                    </tr>
+                `;
+            }).join("");
+        }
+
+        async function loadStaticData() {
+            const [formsResponse, rolesResponse, membersResponse] = await Promise.all([
+                fetch(`${API_BASE}/forms`),
+                fetch(`${API_BASE}/roles`),
+                fetch(`${API_BASE}/members?is_active=true`)
+            ]);
+
+            if (!formsResponse.ok || !rolesResponse.ok || !membersResponse.ok) {
+                throw new Error("Unable to load forms, service roles, or members.");
+            }
+
+            forms = await formsResponse.json();
+            roles = await rolesResponse.json();
+            members = await membersResponse.json();
+
+            const select = document.getElementById("monthSelect");
+            if (forms.length === 0) {
+                select.innerHTML = `<option value="">No months available</option>`;
+                setStatus("No monthly form is available yet.", true);
+                return;
+            }
+
+            select.innerHTML = forms.map((form, index) => `
+                <option value="${form.form_id}" ${index === 0 ? "selected" : ""}>${formatMonth(form.form_month)}</option>
+            `).join("");
+        }
+
+        async function loadScheduleForSelectedMonth() {
+            const formId = document.getElementById("monthSelect").value;
+            if (!formId) {
+                return;
+            }
+
+            try {
+                setStatus("Loading service schedule...");
+                const selectedForm = forms.find((form) => String(form.form_id) === String(formId));
+
+                const [serviceDatesResponse, schedulesResponse] = await Promise.all([
+                    fetch(`${API_BASE}/forms/${formId}/service-dates`),
+                    fetch(`${API_BASE}/forms/${formId}/schedules`)
+                ]);
+
+                if (!serviceDatesResponse.ok || !schedulesResponse.ok) {
+                    throw new Error("Unable to load service dates or schedule assignments.");
+                }
+
+                const serviceDates = await serviceDatesResponse.json();
+                const schedules = await schedulesResponse.json();
+
+                renderSummary(selectedForm, serviceDates, schedules);
+                renderScheduleTable(selectedForm, serviceDates, schedules);
+                setStatus("Schedule loaded successfully.");
+            } catch (error) {
+                setStatus(error.message, true);
+            }
+        }
+
+        window.addEventListener("load", async () => {
+            try {
+                await loadStaticData();
+                await loadScheduleForSelectedMonth();
+                document.getElementById("monthSelect").addEventListener("change", loadScheduleForSelectedMonth);
+            } catch (error) {
+                setStatus(error.message, true);
+            }
+        });
+    </script>
+</body>
+</html>

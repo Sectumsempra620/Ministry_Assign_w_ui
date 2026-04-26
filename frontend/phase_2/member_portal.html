@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Service Portal</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f6f0e3;
+            --panel: rgba(255, 252, 245, 0.94);
+            --panel-strong: #fffaf0;
+            --border: #decaa3;
+            --text: #2d2215;
+            --muted: #6f5c43;
+            --accent: #8d5f2f;
+            --accent-dark: #6f491f;
+            --shadow: 0 18px 40px rgba(92, 67, 29, 0.12);
+        }
+
+        body {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(199, 162, 92, 0.18), transparent 28%),
+                linear-gradient(180deg, #efe3c9 0%, var(--bg) 38%, #fdfaf4 100%);
+            min-height: 100vh;
+            padding: 28px 18px 42px;
+        }
+
+        .page {
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+
+        .hero,
+        .selector-card,
+        .info-card,
+        .assignments-card,
+        .availability-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+            padding: 24px;
+            margin-bottom: 18px;
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            font-size: clamp(2rem, 4vw, 3.1rem);
+            line-height: 1.05;
+        }
+
+        p {
+            color: var(--muted);
+            line-height: 1.65;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        select {
+            width: 100%;
+            max-width: 360px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            padding: 14px 15px;
+            font: inherit;
+            background: var(--panel-strong);
+            color: var(--text);
+        }
+
+        select:focus {
+            outline: 2px solid rgba(141, 95, 47, 0.18);
+            border-color: var(--accent);
+        }
+
+        .status {
+            padding: 14px 16px;
+            border-radius: 14px;
+            margin-top: 16px;
+            background: #fff4d7;
+            color: #735117;
+            line-height: 1.5;
+        }
+
+        .status.error {
+            background: #fce6e6;
+            color: #8f2c2c;
+        }
+
+        .status.success {
+            background: #e8f3ea;
+            color: #24613d;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .info-item {
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: #fffdf8;
+        }
+
+        .info-item strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .role-chips,
+        .assignment-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .chip {
+            display: inline-block;
+            background: #f1e2c0;
+            border: 1px solid #d6ba83;
+            border-radius: 999px;
+            padding: 7px 12px;
+            line-height: 1.4;
+            font-size: 14px;
+        }
+
+        .actions {
+            margin-top: 16px;
+        }
+
+        .btn {
+            display: inline-block;
+            text-decoration: none;
+            border: 0;
+            border-radius: 999px;
+            padding: 13px 20px;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn:hover {
+            background: var(--accent-dark);
+        }
+
+        .assignment-list {
+            flex-direction: column;
+        }
+
+        .assignment-item {
+            padding: 14px 16px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: #fffdf8;
+        }
+
+        .assignment-item strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .assignment-meta {
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+
+        .inline-actions {
+            margin-top: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .btn-secondary {
+            background: #ead7b1;
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            background: #d8bf88;
+        }
+
+        .request-panel {
+            margin-top: 14px;
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: #fff9ee;
+        }
+
+        .request-panel textarea {
+            width: 100%;
+            min-height: 100px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            padding: 12px 14px;
+            font: inherit;
+            resize: vertical;
+            background: var(--panel-strong);
+            color: var(--text);
+        }
+
+        .request-warning {
+            margin-top: 10px;
+            color: #a12626;
+            font-weight: 700;
+            line-height: 1.6;
+        }
+
+        .request-context {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: #f7efe0;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .candidate-warning {
+            color: #a12626;
+            font-weight: 700;
+        }
+
+        .candidate-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .candidate-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: #fffdf8;
+        }
+
+        .candidate-option input {
+            margin-top: 4px;
+        }
+
+        .request-status {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: #f4ecd9;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .availability-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .availability-item {
+            padding: 14px 16px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: #fffdf8;
+        }
+
+        .availability-item strong {
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .availability-yes,
+        .availability-no {
+            font-weight: 700;
+        }
+
+        .availability-yes {
+            color: #24613d;
+        }
+
+        .availability-no {
+            color: #8f2c2c;
+        }
+
+        .empty-text {
+            color: var(--muted);
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <section class="hero">
+            <h1>Member Service Portal</h1>
+            <p>
+                Choose your name to view your basic information and your assigned service roles for a selected month.
+                If your personal information needs to change, use the edit button to update it.
+            </p>
+        </section>
+
+        <section class="selector-card">
+            <label for="memberSelect">Choose your name</label>
+            <select id="memberSelect">
+                <option value="">Loading members...</option>
+            </select>
+            <div id="status" class="status">Loading members...</div>
+        </section>
+
+        <section class="info-card">
+            <h2>Basic Information</h2>
+            <div id="memberInfo" class="grid"></div>
+            <div class="actions">
+                <a id="editLink" class="btn" href="#">Edit My Information</a>
+            </div>
+        </section>
+
+        <section class="assignments-card">
+            <h2>Service Assignments</h2>
+            <label for="monthSelect">Choose a month</label>
+            <select id="monthSelect">
+                <option value="">Select a month</option>
+            </select>
+            <div id="assignmentStatus" class="status">Choose your name first.</div>
+            <div id="assignmentList" class="assignment-list"></div>
+        </section>
+
+        <section class="availability-card">
+            <h2>Submitted Availability</h2>
+            <p>See the Friday dates you previously marked as available or unavailable for the selected month.</p>
+            <div id="availabilityStatus" class="status">Choose your name first.</div>
+            <div id="availabilityList" class="availability-list"></div>
+        </section>
+    </div>
+
+    <script>
+        const API_BASE = `${window.location.origin.replace(":8001", ":8000")}/api/v1`;
+        let members = [];
+        let forms = [];
+        let selectedMember = null;
+        let currentSchedules = [];
+        let currentServiceDates = [];
+
+        function parseLocalDate(dateString) {
+            return new Date(`${dateString}T00:00:00`);
+        }
+
+        function formatMonth(dateString) {
+            return parseLocalDate(dateString).toLocaleDateString("en-US", {
+                month: "long",
+                year: "numeric"
+            });
+        }
+
+        function formatFriday(dateString) {
+            return parseLocalDate(dateString).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric"
+            });
+        }
+
+        function isFutureServiceDate(dateString) {
+            if (!dateString) {
+                return false;
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return parseLocalDate(dateString) > today;
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#39;");
+        }
+
+        function setStatus(message, isError = false) {
+            const status = document.getElementById("status");
+            status.textContent = message;
+            status.className = isError ? "status error" : "status";
+        }
+
+        function setAssignmentStatus(message, isError = false) {
+            const status = document.getElementById("assignmentStatus");
+            status.textContent = message;
+            status.className = isError ? "status error" : "status";
+        }
+
+        function setAvailabilityStatus(message, isError = false) {
+            const status = document.getElementById("availabilityStatus");
+            status.textContent = message;
+            status.className = isError ? "status error" : "status";
+        }
+
+        function populateMemberSelect() {
+            const select = document.getElementById("memberSelect");
+            select.innerHTML = '<option value="">Select your name</option>' + members.map((member) => `
+                <option value="${member.member_id}">${member.member_name}</option>
+            `).join("");
+        }
+
+        function populateMonthSelect() {
+            const select = document.getElementById("monthSelect");
+            select.innerHTML = '<option value="">Select a month</option>' + forms.map((form) => `
+                <option value="${form.form_id}">${formatMonth(form.form_month)}</option>
+            `).join("");
+        }
+
+        function renderMemberInfo(member) {
+            const info = document.getElementById("memberInfo");
+            const roles = (member.roles || []).map((role) => role.role_name);
+            info.innerHTML = `
+                <div class="info-item">
+                    <strong>Name</strong>
+                    <span>${member.member_name}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Email</strong>
+                    <span>${member.email || "Not provided"}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Phone</strong>
+                    <span>${member.phone || "Not provided"}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Gender</strong>
+                    <span>${member.member_gender || "Not provided"}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Bible Study Group</strong>
+                    <span>${member.bible_study_group || "Not assigned"}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Worship Pairing Group</strong>
+                    <span>${member.is_senior_for_pairing ? "Senior Pairing Group" : "Younger Pairing Group"}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Qualified Services</strong>
+                    <div class="role-chips">
+                        ${roles.length > 0 ? roles.map((role) => `<span class="chip">${role}</span>`).join("") : '<span class="empty-text">No roles recorded</span>'}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById("editLink").href = `/phase_1/member_signup.html?member_id=${member.member_id}`;
+        }
+
+        async function loadAssignments() {
+            const formId = document.getElementById("monthSelect").value;
+            const assignmentList = document.getElementById("assignmentList");
+            const availabilityList = document.getElementById("availabilityList");
+
+            if (!selectedMember || !formId) {
+                assignmentList.innerHTML = "";
+                availabilityList.innerHTML = "";
+                setAssignmentStatus(selectedMember ? "Choose a month to view assignments." : "Choose your name first.");
+                setAvailabilityStatus(selectedMember ? "Choose a month to view submitted availability." : "Choose your name first.");
+                return;
+            }
+
+            try {
+                setAssignmentStatus("Loading assignments...");
+                setAvailabilityStatus("Loading submitted availability...");
+
+                const [schedulesResponse, availabilityResponse, serviceDatesResponse, requestsResponse] = await Promise.all([
+                    fetch(`${API_BASE}/forms/${formId}/schedules`),
+                    fetch(`${API_BASE}/forms/${formId}/availability`),
+                    fetch(`${API_BASE}/forms/${formId}/service-dates`),
+                    fetch(`${API_BASE}/forms/${formId}/reschedule-requests`)
+                ]);
+
+                if (!schedulesResponse.ok || !availabilityResponse.ok || !serviceDatesResponse.ok || !requestsResponse.ok) {
+                    throw new Error("Unable to load schedule or availability details.");
+                }
+
+                const schedules = await schedulesResponse.json();
+                const availabilityEntries = await availabilityResponse.json();
+                const serviceDates = await serviceDatesResponse.json();
+                const rescheduleRequests = await requestsResponse.json();
+                currentSchedules = schedules;
+                currentServiceDates = serviceDates;
+                const memberSchedules = schedules.filter((item) => item.member_id === selectedMember.member_id);
+                const memberAvailability = availabilityEntries
+                    .filter((item) => item.member_id === selectedMember.member_id)
+                    .sort((a, b) => a.service_week - b.service_week);
+                const serviceDateByWeek = Object.fromEntries(
+                    serviceDates.map((item) => [item.service_week, item.friday_date])
+                );
+                const requestByScheduleId = {};
+                rescheduleRequests
+                    .filter((item) => item.original_member_id === selectedMember.member_id)
+                    .forEach((item) => {
+                        if (!requestByScheduleId[item.schedule_id]) {
+                            requestByScheduleId[item.schedule_id] = item;
+                        }
+                    });
+
+                if (memberSchedules.length === 0) {
+                    assignmentList.innerHTML = `<div class="empty-text">No assignments recorded for ${selectedMember.member_name} in this month.</div>`;
+                    setAssignmentStatus("No service assignments found for the selected month.");
+                } else {
+                    assignmentList.innerHTML = memberSchedules.map((item) => `
+                        <div class="assignment-item">
+                            <strong>${item.role_name}</strong>
+                            <div class="assignment-meta">${formatFriday(serviceDateByWeek[item.service_week])} · Week ${item.service_week}</div>
+                            ${requestByScheduleId[item.schedule_id] ? `
+                                <div class="request-status">
+                                    <strong>Reschedule Request Status</strong>
+                                    <div>Status: ${escapeHtml(requestByScheduleId[item.schedule_id].status)}</div>
+                                    <div>Reason: ${escapeHtml(requestByScheduleId[item.schedule_id].reason)}</div>
+                                </div>
+                            ` : !isFutureServiceDate(serviceDateByWeek[item.service_week]) ? `
+                                <div class="request-status">
+                                    <strong>Replacement Requests Closed</strong>
+                                    <div>You can only request a replacement for service dates after today.</div>
+                                </div>
+                            ` : `
+                                <div class="inline-actions">
+                                    <button type="button" class="btn btn-secondary request-btn" data-schedule-id="${item.schedule_id}" data-form-id="${formId}">
+                                        Request Replacement
+                                    </button>
+                                </div>
+                            `} 
+                            <div id="request-panel-${item.schedule_id}"></div>
+                        </div>
+                    `).join("");
+                    setAssignmentStatus("Assignments loaded successfully.");
+
+                    document.querySelectorAll(".request-btn").forEach((button) => {
+                        button.dataset.roleName = memberSchedules.find(
+                            (schedule) => schedule.schedule_id === parseInt(button.dataset.scheduleId, 10)
+                        )?.role_name || "";
+                    });
+
+                    document.querySelectorAll(".request-btn").forEach((button) => {
+                        button.addEventListener("click", () => openRescheduleForm(
+                            parseInt(button.dataset.scheduleId, 10),
+                            parseInt(button.dataset.formId, 10),
+                            button.dataset.roleName
+                        ));
+                    });
+                }
+
+                if (memberAvailability.length === 0) {
+                    availabilityList.innerHTML = `<div class="empty-text">No submitted availability was found for ${selectedMember.member_name} in this month.</div>`;
+                    setAvailabilityStatus("No availability submission found for the selected month.");
+                } else {
+                    availabilityList.innerHTML = memberAvailability.map((item) => {
+                        const fridayDate = serviceDateByWeek[item.service_week];
+                        const formattedDate = fridayDate
+                            ? parseLocalDate(fridayDate).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric"
+                            })
+                            : `Week ${item.service_week}`;
+                        return `
+                            <div class="availability-item">
+                                <strong>${formattedDate}</strong>
+                                <div>${item.is_available ? '<span class="availability-yes">Yes, available</span>' : '<span class="availability-no">No, unavailable</span>'}</div>
+                            </div>
+                        `;
+                    }).join("");
+                    setAvailabilityStatus("Submitted availability loaded successfully.");
+                }
+            } catch (error) {
+                assignmentList.innerHTML = "";
+                availabilityList.innerHTML = "";
+                setAssignmentStatus(error.message, true);
+                setAvailabilityStatus(error.message, true);
+            }
+        }
+
+        async function loadMemberDetails(memberId) {
+            try {
+                const response = await fetch(`${API_BASE}/members/${memberId}`);
+                if (!response.ok) {
+                    throw new Error("Unable to load member information.");
+                }
+
+                selectedMember = await response.json();
+                renderMemberInfo(selectedMember);
+                setStatus("Member profile loaded.");
+                setAssignmentStatus("Choose a month to view assignments.");
+                setAvailabilityStatus("Choose a month to view submitted availability.");
+                await loadAssignments();
+            } catch (error) {
+                setStatus(error.message, true);
+            }
+        }
+
+        async function loadInitialData() {
+            try {
+                const [membersResponse, formsResponse] = await Promise.all([
+                    fetch(`${API_BASE}/members?is_active=true`),
+                    fetch(`${API_BASE}/forms`)
+                ]);
+
+                if (!membersResponse.ok || !formsResponse.ok) {
+                    throw new Error("Unable to load members or months.");
+                }
+
+                members = await membersResponse.json();
+                forms = await formsResponse.json();
+                populateMemberSelect();
+                populateMonthSelect();
+                setStatus("Choose your name to begin.");
+            } catch (error) {
+                setStatus(error.message, true);
+            }
+        }
+
+        async function refreshSelectedMemberIfNeeded() {
+            const memberId = document.getElementById("memberSelect").value;
+            if (!memberId) {
+                return;
+            }
+
+            await loadMemberDetails(memberId);
+        }
+
+        function renderRoleSpecificCandidateDetail(candidate, roleName) {
+            if (roleName === "Worship Leader") {
+                return `<div>${candidate.is_senior_for_pairing ? "Senior" : "Junior"}</div>`;
+            }
+
+            if (roleName === "Bible Study Leader") {
+                const groupLabel = candidate.bible_study_group
+                    ? candidate.bible_study_group.replace("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
+                    : "Group not assigned";
+                const scheduleImpactNotes = [];
+                if (candidate.served_previous_week_same_role) {
+                    scheduleImpactNotes.push("Served last week.");
+                }
+                if (candidate.served_next_week_same_role) {
+                    scheduleImpactNotes.push("Serves next week.");
+                }
+                return `
+                    <div>${escapeHtml(groupLabel)}</div>
+                    ${scheduleImpactNotes.length > 0 ? `
+                        <div class="candidate-warning">
+                            ${scheduleImpactNotes.map((note) => `<div>${note}</div>`).join("")}
+                            <div>Choosing this replacement will likely cause more schedule changes.</div>
+                        </div>
+                    ` : ""}
+                `;
+            }
+
+            return "";
+        }
+
+        function getAdjacentWeekBibleStudyLeaders(scheduleId) {
+            const currentSchedule = currentSchedules.find((schedule) => schedule.schedule_id === scheduleId);
+            if (!currentSchedule || currentSchedule.role_name !== "Bible Study Leader") {
+                return {
+                    previous: [],
+                    next: []
+                };
+            }
+
+            const previousWeek = currentSchedule.service_week - 1;
+            const nextWeek = currentSchedule.service_week + 1;
+
+            return {
+                previous: previousWeek < 1
+                    ? []
+                    : currentSchedules
+                        .filter((schedule) => schedule.role_name === "Bible Study Leader" && schedule.service_week === previousWeek)
+                        .map((schedule) => schedule.member_name),
+                next: currentSchedules
+                    .filter((schedule) => schedule.role_name === "Bible Study Leader" && schedule.service_week === nextWeek)
+                    .map((schedule) => schedule.member_name),
+            };
+        }
+
+        async function openRescheduleForm(scheduleId, formId, roleName) {
+            const panel = document.getElementById(`request-panel-${scheduleId}`);
+            if (!panel) {
+                return;
+            }
+
+            panel.innerHTML = `<div class="request-panel">Loading replacement options...</div>`;
+
+            try {
+                const response = await fetch(`${API_BASE}/schedules/${scheduleId}/replacement-candidates`);
+                if (!response.ok) {
+                    throw new Error("Unable to load replacement candidates.");
+                }
+
+                const candidates = await response.json();
+                const adjacentWeekLeaders = getAdjacentWeekBibleStudyLeaders(scheduleId);
+                panel.innerHTML = `
+                    <div class="request-panel">
+                        <label for="reason-${scheduleId}">Why can you no longer serve?</label>
+                        <textarea id="reason-${scheduleId}" placeholder="Share the reason so the coordinators understand the change."></textarea>
+                        <div class="request-warning">Optional: choose the backup people you already discussed privately. If you choose more than one, the system will prefer the person with fewer assignments this month.</div>
+                        ${roleName === "Bible Study Leader" ? `
+                            <div class="request-context">
+                                <div>Previous week's Bible Study Leaders: ${adjacentWeekLeaders.previous.length > 0 ? escapeHtml(adjacentWeekLeaders.previous.join(", ")) : "None"}</div>
+                                <div>Next week's Bible Study Leaders: ${adjacentWeekLeaders.next.length > 0 ? escapeHtml(adjacentWeekLeaders.next.join(", ")) : "None"}</div>
+                            </div>
+                        ` : ""}
+                        <div class="candidate-list">
+                            ${candidates.length > 0 ? candidates.map((candidate) => `
+                                <label class="candidate-option">
+                                    <input type="checkbox" value="${candidate.member_id}">
+                                    <div>
+                                        <strong>${escapeHtml(candidate.member_name)}</strong>
+                                        <div>${candidate.monthly_assignment_count} assignment(s) this month</div>
+                                        ${renderRoleSpecificCandidateDetail(candidate, roleName)}
+                                    </div>
+                                </label>
+                            `).join("") : `<div class="empty-text">No direct backup candidates are currently available for this assignment.</div>`}
+                        </div>
+                        <div class="inline-actions">
+                            <button type="button" class="btn" id="submit-request-${scheduleId}">Submit Request</button>
+                            <button type="button" class="btn btn-secondary" id="cancel-request-${scheduleId}">Cancel</button>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById(`submit-request-${scheduleId}`).addEventListener("click", async () => {
+                    await submitRescheduleRequest(scheduleId, formId);
+                });
+                document.getElementById(`cancel-request-${scheduleId}`).addEventListener("click", () => {
+                    panel.innerHTML = "";
+                });
+            } catch (error) {
+                panel.innerHTML = `<div class="request-panel"><div class="status error">${escapeHtml(error.message)}</div></div>`;
+            }
+        }
+
+        async function submitRescheduleRequest(scheduleId, formId) {
+            const reasonInput = document.getElementById(`reason-${scheduleId}`);
+            const panel = document.getElementById(`request-panel-${scheduleId}`);
+            if (!reasonInput || !panel || !selectedMember) {
+                return;
+            }
+
+            const reason = reasonInput.value.trim();
+            if (!reason) {
+                panel.querySelector(".request-panel").insertAdjacentHTML(
+                    "beforeend",
+                    `<div class="status error">Please tell us why you can no longer serve before submitting the request.</div>`
+                );
+                return;
+            }
+
+            const preferredCandidateIds = Array.from(
+                panel.querySelectorAll('input[type="checkbox"]:checked')
+            ).map((input) => parseInt(input.value, 10));
+
+            const response = await fetch(`${API_BASE}/reschedule-requests`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    schedule_id: scheduleId,
+                    requesting_member_id: selectedMember.member_id,
+                    reason,
+                    preferred_candidate_ids: preferredCandidateIds
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                panel.innerHTML = `<div class="request-panel"><div class="status error">${escapeHtml(error.detail || "Unable to submit request.")}</div></div>`;
+                return;
+            }
+
+            panel.innerHTML = `<div class="request-panel"><div class="status success">Reschedule request submitted successfully. The coordinators can now apply the rescheduler.</div></div>`;
+            await loadAssignments();
+        }
+
+        window.addEventListener("load", async () => {
+            await loadInitialData();
+
+            document.getElementById("memberSelect").addEventListener("change", async (event) => {
+                const memberId = event.target.value;
+                if (!memberId) {
+                    selectedMember = null;
+                    document.getElementById("memberInfo").innerHTML = "";
+                    document.getElementById("assignmentList").innerHTML = "";
+                    document.getElementById("availabilityList").innerHTML = "";
+                    setStatus("Choose your name to begin.");
+                    setAssignmentStatus("Choose your name first.");
+                    setAvailabilityStatus("Choose your name first.");
+                    return;
+                }
+                await loadMemberDetails(memberId);
+            });
+
+            document.getElementById("monthSelect").addEventListener("change", loadAssignments);
+        });
+
+        window.addEventListener("focus", refreshSelectedMemberIfNeeded);
+        window.addEventListener("pageshow", refreshSelectedMemberIfNeeded);
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) {
+                refreshSelectedMemberIfNeeded();
+            }
+        });
+    </script>
+</body>
+</html>

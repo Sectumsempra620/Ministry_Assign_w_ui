@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Church Service Scheduling</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Georgia, "Times New Roman", serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            color: #666;
+        }
+        
+        .main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .main {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .list-container {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .list-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .list-item-content {
+            flex: 1;
+        }
+        
+        .list-item-title {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .list-item-subtitle {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .list-item-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .list-item-actions button {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: #666;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-primary {
+            background: #cfe2ff;
+            color: #084298;
+        }
+        
+        .badge-success {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #664d03;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .mt-20 {
+            margin-top: 20px;
+        }
+        
+        .mb-20 {
+            margin-bottom: 20px;
+        }
+
+        .auth-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(18, 24, 38, 0.72);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .auth-card {
+            width: min(420px, 100%);
+            background: white;
+            border-radius: 14px;
+            padding: 28px;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .auth-card h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .auth-card p {
+            color: #666;
+            margin-bottom: 18px;
+            line-height: 1.5;
+        }
+
+        .auth-error {
+            color: #b42318;
+            font-size: 13px;
+            min-height: 18px;
+            margin-top: 10px;
+        }
+
+        .app-shell.hidden,
+        .auth-overlay.hidden {
+            display: none;
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: center;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-card">
+            <h2>Admin Access</h2>
+            <p>Enter the admin password to open the scheduling dashboard.</p>
+            <form id="authForm">
+                <div class="form-group">
+                    <label for="adminPassword">Password</label>
+                    <input type="password" id="adminPassword" autocomplete="current-password" required>
+                </div>
+                <button type="submit">Unlock Admin Page</button>
+                <div id="authError" class="auth-error"></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="appShell" class="container app-shell hidden">
+        <!-- Header -->
+        <header>
+            <h1>⛪ Church Service Scheduling System</h1>
+            <p>Manage members, availability, and service assignments</p>
+            <div id="status" style="margin-top: 10px; color: #666;"></div>
+            <div class="header-actions">
+                <button type="button" class="btn-secondary" onclick="logoutAdmin()">Lock Admin Page</button>
+            </div>
+        </header>
+        
+        <div class="main">
+            <!-- Members Card -->
+            <div class="card">
+                <h2>👥 Members</h2>
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('members', 'list')">List</button>
+                    <button class="tab-btn" onclick="switchTab('members', 'create')">Add New</button>
+                </div>
+                
+                <div id="members-list" class="tab-content active">
+                    <div id="membersList" class="list-container"></div>
+                </div>
+                
+                <div id="members-create" class="tab-content">
+                    <form id="memberForm" onsubmit="createMember(event)">
+                        <div class="form-group">
+                            <label>Full Name *</label>
+                            <input type="text" id="member_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Gender</label>
+                            <select id="member_gender">
+                                <option value="">--Select--</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="email">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" id="phone">
+                        </div>
+                        <div class="form-group">
+                            <label>Bible Study Group</label>
+                            <select id="bible_study_group">
+                                <option value="">--None--</option>
+                                <option value="group_a">Group A</option>
+                                <option value="group_b">Group B</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Qualified Services (Check all that apply)</label>
+                            <div id="rolesCheckboxes" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
+                                <!-- Checkboxes will be loaded dynamically -->
+                            </div>
+                            <small style="color: #666; font-size: 12px;">Select all services you can perform</small>
+                        </div>
+                        <button type="submit">Create Member</button>
+                    </form>
+                    <div id="memberMessage"></div>
+                </div>
+            </div>
+            
+            <!-- Forms Card -->
+            <div class="card">
+                <h2>📋 Monthly Forms</h2>
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('forms', 'list')">List</button>
+                    <button class="tab-btn" onclick="switchTab('forms', 'create')">Create</button>
+                </div>
+                
+                <div id="forms-list" class="tab-content active">
+                    <div id="formsList" class="list-container"></div>
+                </div>
+                
+                <div id="forms-create" class="tab-content">
+                    <form id="formForm" onsubmit="createForm(event)">
+                        <div class="form-group">
+                            <label>Form Month *</label>
+                            <input type="date" id="form_month" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Service Weeks *</label>
+                            <select id="service_weeks" required>
+                                <option value="">--Select--</option>
+                                <option value="4">4 Fridays</option>
+                                <option value="5">5 Fridays</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Submission Deadline</label>
+                            <input type="date" id="submission_deadline">
+                        </div>
+                        <div class="form-group">
+                            <label>Notes</label>
+                            <textarea id="notes" rows="3"></textarea>
+                        </div>
+                        <button type="submit">Create Form</button>
+                    </form>
+                    <div id="formMessage"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Info Section -->
+        <div class="card">
+            <h2>ℹ️ System Information</h2>
+            <div id="systemInfo" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div>
+                    <strong>Total Members:</strong>
+                    <p id="totalMembers">-</p>
+                </div>
+                <div>
+                    <strong>Total Forms:</strong>
+                    <p id="totalForms">-</p>
+                </div>
+                <div>
+                    <strong>API Status:</strong>
+                    <p id="apiStatus"><span class="spinner"></span> Checking...</p>
+                </div>
+                <div>
+                    <strong>Database Status:</strong>
+                    <p id="dbStatus"><span class="spinner"></span> Checking...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = `${window.location.origin.replace(':8001', ':8000')}/api/v1`;
+        const HEALTH_URL = `${window.location.origin.replace(':8001', ':8000')}/health`;
+        const ADMIN_PASSWORD = "Cjsy1361";
+        const ADMIN_SESSION_KEY = "church_admin_authenticated";
+
+        function showApp() {
+            document.getElementById('authOverlay').classList.add('hidden');
+            document.getElementById('appShell').classList.remove('hidden');
+        }
+
+        function logoutAdmin() {
+            sessionStorage.removeItem(ADMIN_SESSION_KEY);
+            document.getElementById('appShell').classList.add('hidden');
+            document.getElementById('authOverlay').classList.remove('hidden');
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('authError').textContent = '';
+        }
+
+        function handleAdminLogin(event) {
+            event.preventDefault();
+            const password = document.getElementById('adminPassword').value;
+            const authError = document.getElementById('authError');
+
+            if (password !== ADMIN_PASSWORD) {
+                authError.textContent = 'Incorrect password.';
+                return;
+            }
+
+            sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
+            authError.textContent = '';
+            showApp();
+            initializeDashboard();
+        }
+        
+        // Tab switching
+        function switchTab(section, tab) {
+            document.querySelectorAll(`#${section}-${tab}`).forEach(el => {
+                if (el.id.startsWith(section)) {
+                    el.classList.remove('active');
+                }
+            });
+            document.getElementById(`${section}-${tab}`).classList.add('active');
+            
+            document.querySelectorAll(`[onclick*="switchTab('${section}"]`).forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+        
+        // Create Member
+        async function createMember(e) {
+            e.preventDefault();
+            const form = e.target;
+            const memberMessage = document.getElementById('memberMessage');
+            memberMessage.innerHTML = '<span class="spinner"></span> Creating...';
+            
+            // Get checked roles
+            const checkedBoxes = document.querySelectorAll('#rolesCheckboxes input[type="checkbox"]:checked');
+            const selectedRoles = Array.from(checkedBoxes).map(checkbox => parseInt(checkbox.value));
+            
+            try {
+                const response = await fetch(`${API_BASE}/members`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        member_name: document.getElementById('member_name').value,
+                        member_gender: document.getElementById('member_gender').value || null,
+                        email: document.getElementById('email').value || null,
+                        phone: document.getElementById('phone').value || null,
+                        bible_study_group: document.getElementById('bible_study_group').value || null,
+                        qualified_roles: selectedRoles.length > 0 ? selectedRoles : null
+                    })
+                });
+                
+                if (response.ok) {
+                    memberMessage.innerHTML = '<div class="alert alert-success">✓ Member created successfully!</div>';
+                    form.reset();
+                    // Uncheck all checkboxes
+                    document.querySelectorAll('#rolesCheckboxes input[type="checkbox"]').forEach(cb => cb.checked = false);
+                    loadMembers();
+                    setTimeout(() => { memberMessage.innerHTML = ''; }, 3000);
+                } else {
+                    const error = await response.json();
+                    memberMessage.innerHTML = `<div class="alert alert-error">✗ Error: ${error.detail}</div>`;
+                }
+            } catch (error) {
+                memberMessage.innerHTML = `<div class="alert alert-error">✗ Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Delete Member
+        async function deleteMember(memberId, memberName) {
+            if (!confirm(`Are you sure you want to delete ${memberName}? This will deactivate their account.`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/members/${memberId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert(`✓ ${memberName} has been deactivated successfully!`);
+                    loadMembers();
+                } else {
+                    const error = await response.json();
+                    alert(`✗ Error: ${error.detail}`);
+                }
+            } catch (error) {
+                alert(`✗ Error: ${error.message}`);
+            }
+        }
+        
+        // Create Form
+        async function createForm(e) {
+            e.preventDefault();
+            const form = e.target;
+            const formMessage = document.getElementById('formMessage');
+            formMessage.innerHTML = '<span class="spinner"></span> Creating...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/forms`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        form_month: document.getElementById('form_month').value,
+                        service_weeks: parseInt(document.getElementById('service_weeks').value),
+                        submission_deadline: document.getElementById('submission_deadline').value || null,
+                        notes: document.getElementById('notes').value || null
+                    })
+                });
+                
+                if (response.ok) {
+                    formMessage.innerHTML = '<div class="alert alert-success">✓ Form created successfully!</div>';
+                    form.reset();
+                    loadForms();
+                    setTimeout(() => { formMessage.innerHTML = ''; }, 3000);
+                } else {
+                    const error = await response.json();
+                    formMessage.innerHTML = `<div class="alert alert-error">✗ Error: ${error.detail}</div>`;
+                }
+            } catch (error) {
+                formMessage.innerHTML = `<div class="alert alert-error">✗ Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Load roles for the member creation form
+        async function loadRolesForMemberForm() {
+            try {
+                const response = await fetch(`${API_BASE}/roles`);
+                if (response.ok) {
+                    const roles = await response.json();
+                    const container = document.getElementById('rolesCheckboxes');
+                    container.innerHTML = '';
+                    
+                    roles.forEach(role => {
+                        const checkboxDiv = document.createElement('div');
+                        checkboxDiv.style.marginBottom = '8px';
+                        
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.id = `role_${role.role_id}`;
+                        checkbox.value = role.role_id;
+                        checkbox.style.marginRight = '8px';
+                        
+                        const label = document.createElement('label');
+                        label.htmlFor = `role_${role.role_id}`;
+                        label.textContent = `${role.role_name} - ${role.description}`;
+                        label.style.fontSize = '14px';
+                        label.style.cursor = 'pointer';
+                        
+                        checkboxDiv.appendChild(checkbox);
+                        checkboxDiv.appendChild(label);
+                        container.appendChild(checkboxDiv);
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load roles:', error);
+            }
+        }
+        
+        // Load Members
+        async function loadMembers() {
+            try {
+                const response = await fetch(`${API_BASE}/members?is_active=true`);
+                const members = await response.json();
+                const membersList = document.getElementById('membersList');
+                
+                if (members.length === 0) {
+                    membersList.innerHTML = '<p style="text-align: center; color: #999;">No members yet. Create one to get started!</p>';
+                    document.getElementById('totalMembers').textContent = '0';
+                    return;
+                }
+                
+                membersList.innerHTML = members.map(m => `
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">${m.member_name}</div>
+                            <div class="list-item-subtitle">
+                                ${m.member_gender ? m.member_gender.toUpperCase() : 'N/A'} | 
+                                ${m.email || 'No email'} | 
+                                ${m.bible_study_group ? m.bible_study_group : 'No group'}
+                            </div>
+                            ${m.roles && m.roles.length > 0 ? `
+                                <div class="list-item-subtitle" style="color: #007bff; font-size: 12px;">
+                                    Qualified: ${m.roles.map(r => r.role_name).join(', ')}
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="list-item-actions">
+                            <button class="btn-danger" onclick="deleteMember(${m.member_id}, '${m.member_name}')" title="Delete Member">🗑️</button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('totalMembers').textContent = members.length;
+            } catch (error) {
+                console.error('Error loading members:', error);
+            }
+        }
+        
+        function parseLocalDate(dateString) {
+            return new Date(`${dateString}T00:00:00`);
+        }
+
+        // Load Forms
+        async function loadForms() {
+            try {
+                const response = await fetch(`${API_BASE}/forms`);
+                const forms = await response.json();
+                const formsList = document.getElementById('formsList');
+                
+                if (forms.length === 0) {
+                    formsList.innerHTML = '<p style="text-align: center; color: #999;">No forms yet. Create one to get started!</p>';
+                    document.getElementById('totalForms').textContent = '0';
+                    return;
+                }
+                
+                formsList.innerHTML = forms.map(f => `
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">${parseLocalDate(f.form_month).toLocaleDateString('en-US', {month: 'long', year: 'numeric'})}</div>
+                            <div class="list-item-subtitle">
+                                ${f.service_weeks} weeks | Status: <span class="badge badge-primary">${f.status}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('totalForms').textContent = forms.length;
+            } catch (error) {
+                console.error('Error loading forms:', error);
+            }
+        }
+        
+        // Health Check
+        async function checkHealth() {
+            try {
+                const response = await fetch(HEALTH_URL);
+                const data = await response.json();
+                document.getElementById('apiStatus').innerHTML = `<span class="badge badge-success">✓ Connected</span>`;
+                document.getElementById('dbStatus').innerHTML = `<span class="badge badge-success">✓ Connected</span>`;
+                document.getElementById('status').innerHTML = '<div class="alert alert-success">✓ System is online and ready</div>';
+            } catch (error) {
+                document.getElementById('apiStatus').innerHTML = `<span class="badge badge-warning">✗ Not Connected</span>`;
+                document.getElementById('dbStatus').innerHTML = `<span class="badge badge-warning">✗ Not Connected</span>`;
+                document.getElementById('status').innerHTML = `<div class="alert alert-error">✗ Cannot connect to API. Make sure FastAPI is running on port 8000</div>`;
+            }
+        }
+
+        function initializeDashboard() {
+            checkHealth();
+            loadMembers();
+            loadForms();
+            loadRolesForMemberForm();
+        }
+        
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            document.getElementById('authForm').addEventListener('submit', handleAdminLogin);
+
+            if (sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true') {
+                showApp();
+                initializeDashboard();
+            }
+
+            // Refresh every 30 seconds
+            setInterval(() => {
+                if (sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true') {
+                    loadMembers();
+                    loadForms();
+                }
+            }, 30000);
+        });
+    </script>
+</body>
+</html>

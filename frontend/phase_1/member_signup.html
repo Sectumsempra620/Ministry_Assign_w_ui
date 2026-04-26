@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Church Member Registration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Georgia, "Times New Roman", serif;
+            background: linear-gradient(145deg, #f0f4ff 0%, #d8e3ff 100%);
+            min-height: 100vh;
+            padding: 24px;
+            color: #223;
+        }
+
+        .page {
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            background: white;
+            border-radius: 18px;
+            padding: 32px;
+            box-shadow: 0 16px 40px rgba(60, 90, 160, 0.14);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #243b75;
+        }
+
+        .hero p {
+            color: #55627e;
+            line-height: 1.6;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 28px;
+            box-shadow: 0 16px 40px rgba(60, 90, 160, 0.14);
+        }
+
+        .card h2 {
+            font-size: 22px;
+            margin-bottom: 18px;
+            color: #243b75;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #33415c;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #cad5ea;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            background: #fbfcff;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #5674d8;
+            box-shadow: 0 0 0 3px rgba(86, 116, 216, 0.14);
+        }
+
+        .services-box {
+            max-height: 240px;
+            overflow-y: auto;
+            border: 1px solid #cad5ea;
+            border-radius: 10px;
+            padding: 14px;
+            background: #fbfcff;
+        }
+
+        .service-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e8eef9;
+        }
+
+        .service-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .service-item input {
+            width: auto;
+            margin-top: 3px;
+        }
+
+        .service-text {
+            flex: 1;
+        }
+
+        .service-name {
+            font-weight: 600;
+            color: #28334d;
+        }
+
+        .service-desc {
+            color: #67738f;
+            font-size: 13px;
+            margin-top: 3px;
+        }
+
+        button {
+            width: 100%;
+            border: none;
+            border-radius: 10px;
+            padding: 14px 18px;
+            font-size: 15px;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, #5674d8 0%, #3955bc 100%);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(57, 85, 188, 0.25);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: wait;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .hint {
+            margin-top: 14px;
+            color: #66738b;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .message {
+            margin-top: 16px;
+        }
+
+        .alert {
+            padding: 14px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .alert-success {
+            background: #e4f6e9;
+            color: #165c2f;
+            border: 1px solid #bee5c8;
+        }
+
+        .alert-error {
+            background: #fbe7e8;
+            color: #842029;
+            border: 1px solid #f0c4c8;
+        }
+
+        .footer-note {
+            text-align: center;
+            color: #6b7891;
+            font-size: 13px;
+            margin-top: 18px;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 14px;
+            }
+
+            .hero, .card {
+                padding: 20px;
+            }
+
+            .hero h1 {
+                font-size: 26px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="hero">
+            <h1 id="pageTitle">Church Member Registration</h1>
+            <p id="pageIntro">Please fill in your information and select the services you are able to help with. This page is only for member registration.</p>
+        </div>
+
+        <div class="card">
+            <h2 id="formHeading">Register</h2>
+            <form id="memberSignupForm">
+                <div class="form-group">
+                    <label for="member_name">Full Name *</label>
+                    <input type="text" id="member_name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="member_gender">Gender</label>
+                    <select id="member_gender">
+                        <option value="">--Select--</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone</label>
+                    <input type="tel" id="phone">
+                </div>
+
+                <div class="form-group">
+                    <label for="bible_study_group">Bible Study Group</label>
+                    <select id="bible_study_group">
+                        <option value="">--None--</option>
+                        <option value="group_a">Group A</option>
+                        <option value="group_b">Group B</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="is_senior_for_pairing">Worship Pairing Group</label>
+                    <select id="is_senior_for_pairing">
+                        <option value="false">Younger Pairing Group</option>
+                        <option value="true">Senior Pairing Group</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Services You Can Help With</label>
+                    <div id="rolesCheckboxes" class="services-box"></div>
+                </div>
+
+                <button type="submit" id="submitBtn">Submit Registration</button>
+                <div class="hint" id="formHint">Please submit only once. If you have already registered, contact the admin for any updates.</div>
+                <div id="memberMessage" class="message"></div>
+            </form>
+        </div>
+
+        <div class="footer-note">This page only allows registration. No member list or admin tools are available here.</div>
+    </div>
+
+    <script>
+        const API_BASE = `${window.location.origin.replace(':8001', ':8000')}/api/v1`;
+        const params = new URLSearchParams(window.location.search);
+        const memberId = params.get("member_id");
+        let editMode = false;
+
+        async function loadRolesForMemberForm() {
+            const container = document.getElementById("rolesCheckboxes");
+            container.innerHTML = "Loading services...";
+
+            try {
+                const response = await fetch(`${API_BASE}/roles`);
+                if (!response.ok) {
+                    throw new Error("Failed to load services");
+                }
+
+                const roles = await response.json();
+                container.innerHTML = "";
+
+                roles.forEach(role => {
+                    const wrapper = document.createElement("div");
+                    wrapper.className = "service-item";
+
+                    const checkbox = document.createElement("input");
+                    checkbox.type = "checkbox";
+                    checkbox.id = `role_${role.role_id}`;
+                    checkbox.value = role.role_id;
+
+                    const textWrap = document.createElement("div");
+                    textWrap.className = "service-text";
+
+                    const name = document.createElement("label");
+                    name.className = "service-name";
+                    name.htmlFor = checkbox.id;
+                    name.textContent = role.role_name;
+
+                    const desc = document.createElement("div");
+                    desc.className = "service-desc";
+                    desc.textContent = role.description || "No description";
+
+                    textWrap.appendChild(name);
+                    textWrap.appendChild(desc);
+
+                    wrapper.appendChild(checkbox);
+                    wrapper.appendChild(textWrap);
+                    container.appendChild(wrapper);
+                });
+            } catch (error) {
+                container.innerHTML = '<div class="alert alert-error">Unable to load services right now.</div>';
+            }
+        }
+
+        function setCheckboxSelections(roleIds) {
+            const selected = new Set(roleIds || []);
+            document.querySelectorAll('#rolesCheckboxes input[type="checkbox"]').forEach((checkbox) => {
+                checkbox.checked = selected.has(parseInt(checkbox.value, 10));
+            });
+        }
+
+        function getFormPayload() {
+            const checkedBoxes = document.querySelectorAll('#rolesCheckboxes input[type="checkbox"]:checked');
+            const selectedRoles = Array.from(checkedBoxes).map((checkbox) => parseInt(checkbox.value, 10));
+
+            return {
+                member_name: document.getElementById("member_name").value,
+                member_gender: document.getElementById("member_gender").value || null,
+                email: document.getElementById("email").value || null,
+                phone: document.getElementById("phone").value || null,
+                bible_study_group: document.getElementById("bible_study_group").value || null,
+                is_senior_for_pairing: document.getElementById("is_senior_for_pairing").value === "true",
+                qualified_roles: selectedRoles
+            };
+        }
+
+        async function loadMemberForEdit() {
+            if (!memberId) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/members/${memberId}`);
+                if (!response.ok) {
+                    throw new Error("Unable to load member information.");
+                }
+
+                const member = await response.json();
+                editMode = true;
+                document.getElementById("pageTitle").textContent = "Update Member Information";
+                document.getElementById("pageIntro").textContent = "Review your information below, make updates, and save again.";
+                document.getElementById("formHeading").textContent = "Update Your Information";
+                document.getElementById("submitBtn").textContent = "Save Changes";
+                document.getElementById("formHint").textContent = "You can update both your basic information and the services you are currently able to help with.";
+
+                document.getElementById("member_name").value = member.member_name || "";
+                document.getElementById("member_gender").value = member.member_gender || "";
+                document.getElementById("email").value = member.email || "";
+                document.getElementById("phone").value = member.phone || "";
+                document.getElementById("bible_study_group").value = member.bible_study_group || "";
+                document.getElementById("is_senior_for_pairing").value = member.is_senior_for_pairing ? "true" : "false";
+                setCheckboxSelections((member.roles || []).map((role) => role.role_id));
+            } catch (error) {
+                document.getElementById("memberMessage").innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+            }
+        }
+
+        async function submitMemberForm(event) {
+            event.preventDefault();
+
+            const messageBox = document.getElementById("memberMessage");
+            const submitBtn = document.getElementById("submitBtn");
+            const payload = getFormPayload();
+
+            messageBox.innerHTML = "";
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Submitting...";
+
+            try {
+                const response = await fetch(
+                    editMode ? `${API_BASE}/members/${memberId}` : `${API_BASE}/members`,
+                    {
+                    method: editMode ? "PUT" : "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                    }
+                );
+
+                if (editMode) {
+                    const rolesResponse = await fetch(`${API_BASE}/members/${memberId}`);
+                    if (rolesResponse.ok) {
+                        const refreshedMember = await rolesResponse.json();
+                        setCheckboxSelections((refreshedMember.roles || []).map((role) => role.role_id));
+                    }
+                }
+
+                if (response.ok) {
+                    messageBox.innerHTML = `<div class="alert alert-success">${editMode ? "Information updated successfully." : "Registration submitted successfully. Thank you."}</div>`;
+                    if (!editMode) {
+                        document.getElementById("memberSignupForm").reset();
+                        document.querySelectorAll('#rolesCheckboxes input[type="checkbox"]').forEach(cb => {
+                            cb.checked = false;
+                        });
+                    }
+                } else {
+                    const error = await response.json();
+                    let detail = error.detail || "Registration failed.";
+
+                    if (typeof detail === "string" && detail.includes("already registered")) {
+                        detail = "You have already registered. Please contact the admin if you need to update your information.";
+                    }
+
+                    messageBox.innerHTML = `<div class="alert alert-error">${detail}</div>`;
+                }
+            } catch (error) {
+                messageBox.innerHTML = `<div class="alert alert-error">${editMode ? "Unable to save changes right now." : "Unable to submit right now. Please try again later."}</div>`;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = editMode ? "Save Changes" : "Submit Registration";
+            }
+        }
+
+        window.addEventListener("load", async () => {
+            await loadRolesForMemberForm();
+            await loadMemberForEdit();
+            document.getElementById("memberSignupForm").addEventListener("submit", submitMemberForm);
+        });
+    </script>
+</body>
+</html>

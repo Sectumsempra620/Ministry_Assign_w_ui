@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Availability Form</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f6f0e3;
+            --panel: rgba(255, 252, 245, 0.94);
+            --panel-strong: #fffaf0;
+            --border: #decaa3;
+            --text: #2d2215;
+            --muted: #6f5c43;
+            --accent: #8d5f2f;
+            --accent-dark: #6f491f;
+            --good: #24613d;
+            --bad: #8f2c2c;
+            --shadow: 0 18px 40px rgba(92, 67, 29, 0.12);
+        }
+
+        body {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(199, 162, 92, 0.18), transparent 28%),
+                linear-gradient(180deg, #efe3c9 0%, var(--bg) 38%, #fdfaf4 100%);
+            min-height: 100vh;
+            padding: 28px 18px 42px;
+        }
+
+        .page {
+            max-width: 980px;
+            margin: 0 auto;
+        }
+
+        .hero,
+        .card,
+        .selector-card,
+        .modal-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero {
+            padding: 30px;
+            margin-bottom: 22px;
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            line-height: 1.05;
+        }
+
+        .hero p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.65;
+            max-width: 760px;
+        }
+
+        .selector-card {
+            padding: 24px;
+            margin-bottom: 18px;
+        }
+
+        .selector-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            align-items: end;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        select,
+        textarea {
+            width: 100%;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            padding: 14px 15px;
+            font: inherit;
+            background: var(--panel-strong);
+            color: var(--text);
+        }
+
+        select:focus,
+        textarea:focus {
+            outline: 2px solid rgba(141, 95, 47, 0.18);
+            border-color: var(--accent);
+        }
+
+        .helper {
+            margin-top: 7px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .status {
+            padding: 14px 16px;
+            border-radius: 14px;
+            margin-top: 16px;
+            background: #fff4d7;
+            color: #735117;
+            line-height: 1.5;
+        }
+
+        .status.error {
+            background: #fce6e6;
+            color: var(--bad);
+        }
+
+        .status.success {
+            background: #e8f3ea;
+            color: var(--good);
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 999px;
+            padding: 13px 20px;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-dark);
+            box-shadow: 0 8px 18px rgba(111, 73, 31, 0.22);
+        }
+
+        .btn-secondary {
+            background: #ead9b9;
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            background: #dfc79b;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .summary-item {
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: #fffdf8;
+        }
+
+        .summary-item strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(33, 24, 13, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            z-index: 20;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .modal-card {
+            width: min(900px, 100%);
+            max-height: 92vh;
+            overflow-y: auto;
+            padding: 26px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .modal-header h2 {
+            margin: 0 0 6px;
+            font-size: 30px;
+        }
+
+        .modal-header p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .week-list {
+            display: grid;
+            gap: 14px;
+            margin: 18px 0;
+        }
+
+        .week-card {
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 18px;
+            background: #fffdf8;
+        }
+
+        .week-card h3 {
+            margin: 0 0 4px;
+            font-size: 22px;
+        }
+
+        .week-date {
+            color: var(--muted);
+            margin-bottom: 14px;
+            line-height: 1.5;
+        }
+
+        .week-options {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .choice {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: #fff8ea;
+        }
+
+        .choice input {
+            margin: 0;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 20px 12px 28px;
+            }
+
+            .hero,
+            .selector-card,
+            .modal-card {
+                padding: 20px;
+            }
+
+            .modal-header {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <section class="hero">
+            <h1>Friday Availability Collection</h1>
+            <p>
+                Members first choose who they are and which month they want to fill out. Then the form opens with each
+                Friday's actual date so they can answer yes or no for every service.
+            </p>
+        </section>
+
+        <section class="selector-card">
+            <div class="selector-grid">
+                <div>
+                    <label for="memberSelect">Who are you?</label>
+                    <select id="memberSelect">
+                        <option value="">Select your name</option>
+                    </select>
+                    <div class="helper">This dropdown will show active members from the database.</div>
+                </div>
+                <div>
+                    <label for="monthSelect">Which month are you filling out?</label>
+                    <select id="monthSelect">
+                        <option value="">Select a month</option>
+                    </select>
+                    <div class="helper">Only forms already created by the admin will appear here.</div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="openFormBtn" type="button" class="btn-primary">Open Availability Form</button>
+            </div>
+
+            <div id="pageStatus" class="status">Choose your name and month to begin.</div>
+            <div id="selectionSummary" class="summary hidden"></div>
+        </section>
+    </div>
+
+    <div id="formModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div>
+                    <h2 id="modalTitle">Availability Form</h2>
+                    <p id="modalSubtitle">Select yes or no for each Friday.</p>
+                </div>
+                <button id="closeModalBtn" type="button" class="btn-secondary">Close</button>
+            </div>
+
+            <form id="availabilityForm">
+                <div id="weekList" class="week-list"></div>
+
+                <label for="notes">Notes for the admin team</label>
+                <textarea id="notes" placeholder="Optional note about travel, serving constraints, or special dates."></textarea>
+
+                <div class="actions">
+                    <button type="submit" class="btn-primary">Submit Availability</button>
+                    <button id="cancelBtn" type="button" class="btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = `${window.location.origin.replace(":8001", ":8000")}/api/v1`;
+        let members = [];
+        let forms = [];
+        let activeSelection = null;
+
+        function setPageStatus(message, type = "") {
+            const status = document.getElementById("pageStatus");
+            status.textContent = message;
+            status.className = type ? `status ${type}` : "status";
+        }
+
+        function parseLocalDate(dateString) {
+            return new Date(`${dateString}T00:00:00`);
+        }
+
+        function formatMonth(dateString) {
+            return parseLocalDate(dateString).toLocaleDateString("en-US", {
+                month: "long",
+                year: "numeric"
+            });
+        }
+
+        function formatFriday(dateString) {
+            return parseLocalDate(dateString).toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+                year: "numeric"
+            });
+        }
+
+        function renderSelectionSummary(member, form) {
+            const summary = document.getElementById("selectionSummary");
+            summary.classList.remove("hidden");
+            summary.innerHTML = `
+                <div class="summary-item">
+                    <strong>Member</strong>
+                    <span>${member.member_name}</span>
+                </div>
+                <div class="summary-item">
+                    <strong>Month</strong>
+                    <span>${formatMonth(form.form_month)}</span>
+                </div>
+                <div class="summary-item">
+                    <strong>Status</strong>
+                    <span>${form.status}</span>
+                </div>
+                <div class="summary-item">
+                    <strong>Deadline</strong>
+                    <span>${form.submission_deadline || "Not set"}</span>
+                </div>
+            `;
+        }
+
+        function populateMemberSelect() {
+            const select = document.getElementById("memberSelect");
+            select.innerHTML = '<option value="">Select your name</option>' + members.map((member) => `
+                <option value="${member.member_id}">${member.member_name}</option>
+            `).join("");
+        }
+
+        function populateMonthSelect() {
+            const select = document.getElementById("monthSelect");
+            select.innerHTML = '<option value="">Select a month</option>' + forms.map((form) => `
+                <option value="${form.form_id}">${formatMonth(form.form_month)}</option>
+            `).join("");
+        }
+
+        async function loadMembersAndForms() {
+            try {
+                setPageStatus("Loading members and months...");
+
+                const [membersResponse, formsResponse] = await Promise.all([
+                    fetch(`${API_BASE}/members?is_active=true`),
+                    fetch(`${API_BASE}/forms`)
+                ]);
+
+                if (!membersResponse.ok || !formsResponse.ok) {
+                    throw new Error("Unable to load members or monthly forms.");
+                }
+
+                members = await membersResponse.json();
+                forms = await formsResponse.json();
+
+                populateMemberSelect();
+                populateMonthSelect();
+                setPageStatus("Choose your name and month to begin.");
+            } catch (error) {
+                setPageStatus(error.message, "error");
+            }
+        }
+
+        function getSelectedEntities() {
+            const memberId = Number(document.getElementById("memberSelect").value);
+            const formId = Number(document.getElementById("monthSelect").value);
+            const member = members.find((entry) => entry.member_id === memberId);
+            const form = forms.find((entry) => entry.form_id === formId);
+            return { member, form };
+        }
+
+        function openModal() {
+            document.getElementById("formModal").classList.remove("hidden");
+        }
+
+        function closeModal() {
+            document.getElementById("formModal").classList.add("hidden");
+        }
+
+        function renderWeekChoices(serviceDates, existingEntries) {
+            const existingMap = new Map(existingEntries.map((entry) => [entry.service_week, entry.is_available]));
+            const weekList = document.getElementById("weekList");
+
+            weekList.innerHTML = serviceDates.map((serviceDate) => `
+                <div class="week-card">
+                    <h3>Friday ${serviceDate.service_week}</h3>
+                    <div class="week-date">
+                        ${formatFriday(serviceDate.friday_date)}
+                        ${serviceDate.is_holiday ? " • Holiday service" : ""}
+                        ${serviceDate.notes ? ` • ${serviceDate.notes}` : ""}
+                    </div>
+                    <div class="week-options">
+                        <label class="choice">
+                            <input type="radio" name="week_${serviceDate.service_week}" value="true" ${existingMap.get(serviceDate.service_week) === true ? "checked" : ""}>
+                            Yes, I can serve
+                        </label>
+                        <label class="choice">
+                            <input type="radio" name="week_${serviceDate.service_week}" value="false" ${existingMap.get(serviceDate.service_week) === false ? "checked" : ""}>
+                            No, I am unavailable
+                        </label>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        async function openAvailabilityForm() {
+            const { member, form } = getSelectedEntities();
+
+            if (!member || !form) {
+                setPageStatus("Please choose both your name and the month first.", "error");
+                return;
+            }
+
+            try {
+                setPageStatus("Loading Friday dates for the selected month...");
+                renderSelectionSummary(member, form);
+
+                const [serviceDatesResponse, availabilityResponse] = await Promise.all([
+                    fetch(`${API_BASE}/forms/${form.form_id}/service-dates`),
+                    fetch(`${API_BASE}/forms/${form.form_id}/availability`)
+                ]);
+
+                if (!serviceDatesResponse.ok || !availabilityResponse.ok) {
+                    throw new Error("Unable to load service dates or saved availability.");
+                }
+
+                const serviceDates = await serviceDatesResponse.json();
+                const allEntries = await availabilityResponse.json();
+                const memberEntries = allEntries.filter((entry) => entry.member_id === member.member_id);
+
+                if (serviceDates.length === 0) {
+                    throw new Error("This month does not have Friday dates configured yet.");
+                }
+
+                activeSelection = { member, form, serviceDates };
+                document.getElementById("modalTitle").textContent = `${member.member_name} • ${formatMonth(form.form_month)}`;
+                document.getElementById("modalSubtitle").textContent = "Answer yes or no for each Friday service date below.";
+                document.getElementById("notes").value = memberEntries.find((entry) => entry.notes)?.notes || "";
+                renderWeekChoices(serviceDates, memberEntries);
+                openModal();
+                setPageStatus("Availability form opened. Submit when you're done.");
+            } catch (error) {
+                setPageStatus(error.message, "error");
+            }
+        }
+
+        async function submitAvailability(event) {
+            event.preventDefault();
+
+            if (!activeSelection) {
+                setPageStatus("Please reopen the availability form and try again.", "error");
+                return;
+            }
+
+            const payload = {
+                notes: document.getElementById("notes").value || null
+            };
+
+            activeSelection.serviceDates.forEach((serviceDate) => {
+                const selected = document.querySelector(`input[name="week_${serviceDate.service_week}"]:checked`);
+                if (selected) {
+                    payload[`week_${serviceDate.service_week}`] = selected.value === "true";
+                }
+            });
+
+            try {
+                const response = await fetch(
+                    `${API_BASE}/availability?form_id=${activeSelection.form.form_id}&member_id=${activeSelection.member.member_id}`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(payload)
+                    }
+                );
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || "Unable to save availability.");
+                }
+
+                closeModal();
+                setPageStatus("Availability saved successfully.", "success");
+            } catch (error) {
+                setPageStatus(error.message, "error");
+            }
+        }
+
+        window.addEventListener("load", () => {
+            loadMembersAndForms();
+            document.getElementById("openFormBtn").addEventListener("click", openAvailabilityForm);
+            document.getElementById("availabilityForm").addEventListener("submit", submitAvailability);
+            document.getElementById("closeModalBtn").addEventListener("click", closeModal);
+            document.getElementById("cancelBtn").addEventListener("click", closeModal);
+        });
+    </script>
+</body>
+</html>

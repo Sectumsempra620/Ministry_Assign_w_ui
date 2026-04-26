@@ -1,0 +1,26 @@
+# Environment and secrets
+.env
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Virtual environments
+venv/
+.venv/
+
+# Local logs and runtime output
+backend.log
+frontend.log
+*.log
+
+# OS / editor noise
+.DS_Store
+.idea/
+.vscode/
+
+# Build / temp
+/tmp/

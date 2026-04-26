@@ -1,0 +1,37 @@
+name: Check
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Compile Python files
+        run: |
+          python -m py_compile main.py models.py backend/scheduler.py backend/rescheduler.py scripts/generate_schedule.py scripts/reschedule.py
+
+      - name: Check important files exist
+        run: |
+          test -f frontend/phase_1/member_signup.html
+          test -f frontend/phase_2/member_portal.html
+          test -f frontend/phase_2/service_schedule.html
+          test -f scripts/run_system.sh
