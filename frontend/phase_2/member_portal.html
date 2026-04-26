@@ -314,7 +314,7 @@
         <section class="hero">
             <h1>Member Service Portal</h1>
             <p>
-                Choose your name to view your basic information and your assigned service roles for a selected month.
+                Choose your name to view your basic information and your assigned service roles for a selected service period.
                 If your personal information needs to change, use the edit button to update it.
             </p>
         </section>
@@ -337,9 +337,9 @@
 
         <section class="assignments-card">
             <h2>Service Assignments</h2>
-            <label for="monthSelect">Choose a month</label>
+            <label for="monthSelect">Choose a service period</label>
             <select id="monthSelect">
-                <option value="">Select a month</option>
+                <option value="">Select a service period</option>
             </select>
             <div id="assignmentStatus" class="status">Choose your name first.</div>
             <div id="assignmentList" class="assignment-list"></div>
@@ -347,7 +347,7 @@
 
         <section class="availability-card">
             <h2>Submitted Availability</h2>
-            <p>See the Friday dates you previously marked as available or unavailable for the selected month.</p>
+            <p>See the Friday dates you previously marked as available or unavailable for the selected service period.</p>
             <div id="availabilityStatus" class="status">Choose your name first.</div>
             <div id="availabilityList" class="availability-list"></div>
         </section>
@@ -365,11 +365,14 @@
             return new Date(`${dateString}T00:00:00`);
         }
 
-        function formatMonth(dateString) {
-            return parseLocalDate(dateString).toLocaleDateString("en-US", {
-                month: "long",
-                year: "numeric"
-            });
+        function formatPeriod(dateString) {
+            const start = parseLocalDate(dateString);
+            const end = new Date(start);
+            end.setMonth(end.getMonth() + 2);
+            const sameYear = start.getFullYear() === end.getFullYear();
+            const startLabel = start.toLocaleDateString("en-US", { month: "short", ...(sameYear ? {} : { year: "numeric" }) });
+            const endLabel = end.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+            return `${startLabel} - ${endLabel}`;
         }
 
         function formatFriday(dateString) {
@@ -426,8 +429,8 @@
 
         function populateMonthSelect() {
             const select = document.getElementById("monthSelect");
-            select.innerHTML = '<option value="">Select a month</option>' + forms.map((form) => `
-                <option value="${form.form_id}">${formatMonth(form.form_month)}</option>
+            select.innerHTML = '<option value="">Select a service period</option>' + forms.map((form) => `
+                <option value="${form.form_id}">${formatPeriod(form.form_month)}</option>
             `).join("");
         }
 
@@ -478,8 +481,8 @@
             if (!selectedMember || !formId) {
                 assignmentList.innerHTML = "";
                 availabilityList.innerHTML = "";
-                setAssignmentStatus(selectedMember ? "Choose a month to view assignments." : "Choose your name first.");
-                setAvailabilityStatus(selectedMember ? "Choose a month to view submitted availability." : "Choose your name first.");
+                setAssignmentStatus(selectedMember ? "Choose a service period to view assignments." : "Choose your name first.");
+                setAvailabilityStatus(selectedMember ? "Choose a service period to view submitted availability." : "Choose your name first.");
                 return;
             }
 
@@ -521,8 +524,8 @@
                     });
 
                 if (memberSchedules.length === 0) {
-                    assignmentList.innerHTML = `<div class="empty-text">No assignments recorded for ${selectedMember.member_name} in this month.</div>`;
-                    setAssignmentStatus("No service assignments found for the selected month.");
+                    assignmentList.innerHTML = `<div class="empty-text">No assignments recorded for ${selectedMember.member_name} in this service period.</div>`;
+                    setAssignmentStatus("No service assignments found for the selected service period.");
                 } else {
                     assignmentList.innerHTML = memberSchedules.map((item) => `
                         <div class="assignment-item">
@@ -567,8 +570,8 @@
                 }
 
                 if (memberAvailability.length === 0) {
-                    availabilityList.innerHTML = `<div class="empty-text">No submitted availability was found for ${selectedMember.member_name} in this month.</div>`;
-                    setAvailabilityStatus("No availability submission found for the selected month.");
+                    availabilityList.innerHTML = `<div class="empty-text">No submitted availability was found for ${selectedMember.member_name} in this service period.</div>`;
+                    setAvailabilityStatus("No availability submission found for the selected service period.");
                 } else {
                     availabilityList.innerHTML = memberAvailability.map((item) => {
                         const fridayDate = serviceDateByWeek[item.service_week];
@@ -606,8 +609,8 @@
                 selectedMember = await response.json();
                 renderMemberInfo(selectedMember);
                 setStatus("Member profile loaded.");
-                setAssignmentStatus("Choose a month to view assignments.");
-                setAvailabilityStatus("Choose a month to view submitted availability.");
+                setAssignmentStatus("Choose a service period to view assignments.");
+                setAvailabilityStatus("Choose a service period to view submitted availability.");
                 await loadAssignments();
             } catch (error) {
                 setStatus(error.message, true);
@@ -622,7 +625,7 @@
                 ]);
 
                 if (!membersResponse.ok || !formsResponse.ok) {
-                    throw new Error("Unable to load members or months.");
+                    throw new Error("Unable to load members or service periods.");
                 }
 
                 members = await membersResponse.json();
@@ -718,7 +721,7 @@
                     <div class="request-panel">
                         <label for="reason-${scheduleId}">Why can you no longer serve?</label>
                         <textarea id="reason-${scheduleId}" placeholder="Share the reason so the coordinators understand the change."></textarea>
-                        <div class="request-warning">Optional: choose the backup people you already discussed privately. If you choose more than one, the system will prefer the person with fewer assignments this month.</div>
+                        <div class="request-warning">Optional: choose the backup people you already discussed privately. If you choose more than one, the system will prefer the person with fewer assignments in this service period.</div>
                         ${roleName === "Bible Study Leader" ? `
                             <div class="request-context">
                                 <div>Previous week's Bible Study Leaders: ${adjacentWeekLeaders.previous.length > 0 ? escapeHtml(adjacentWeekLeaders.previous.join(", ")) : "None"}</div>
@@ -731,7 +734,7 @@
                                     <input type="checkbox" value="${candidate.member_id}">
                                     <div>
                                         <strong>${escapeHtml(candidate.member_name)}</strong>
-                                        <div>${candidate.monthly_assignment_count} assignment(s) this month</div>
+                                        <div>${candidate.monthly_assignment_count} assignment(s) this service period</div>
                                         ${renderRoleSpecificCandidateDetail(candidate, roleName)}
                                     </div>
                                 </label>

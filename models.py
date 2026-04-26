@@ -4,8 +4,7 @@ SQLAlchemy ORM models matching the MySQL schema
 """
 
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, Enum, ForeignKey, UniqueConstraint, Index, Text, ForeignKeyConstraint, CheckConstraint
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import declarative_base, relationship
 from datetime import datetime, date
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
@@ -39,10 +38,10 @@ class Member(Base):
     schedules = relationship("Schedule", back_populates="member", cascade="all, delete-orphan")
     
     __table_args__ = (
-        Index('idx_full_name', 'member_name'),
-        Index('idx_email', 'email'),
-        Index('idx_is_active', 'is_active'),
-        Index('idx_bible_study_group', 'bible_study_group'),
+        Index('idx_members_full_name', 'member_name'),
+        Index('idx_members_email', 'email'),
+        Index('idx_members_is_active', 'is_active'),
+        Index('idx_members_bible_study_group', 'bible_study_group'),
     )
 
     @property
@@ -72,7 +71,7 @@ class Role(Base):
     schedules = relationship("Schedule", back_populates="role", cascade="all, delete-orphan")
     
     __table_args__ = (
-        Index('idx_role_name', 'role_name'),
+        Index('idx_roles_role_name', 'role_name'),
     )
 
 
@@ -98,9 +97,9 @@ class MemberRole(Base):
     
     __table_args__ = (
         UniqueConstraint('member_id', 'role_id', name='unique_member_role'),
-        Index('idx_member_id', 'member_id'),
-        Index('idx_role_id', 'role_id'),
-        Index('idx_is_current', 'is_current'),
+        Index('idx_member_roles_member_id', 'member_id'),
+        Index('idx_member_roles_role_id', 'role_id'),
+        Index('idx_member_roles_is_current', 'is_current'),
     )
 
     @property
@@ -111,15 +110,15 @@ class MemberRole(Base):
 
 class MonthlyForm(Base):
     """
-    Represents a monthly availability submission cycle.
-    One form per month (enforced by unique constraint).
+    Represents a three-month availability submission cycle.
+    One form per service period (enforced by unique constraint).
     Workflow: draft → open → closed → published
     """
     __tablename__ = "monthly_forms"
     
     form_id = Column(Integer, primary_key=True)
-    form_month = Column(Date, nullable=False, unique=True)  # First day of month
-    service_weeks = Column(Integer, default=4)  # 4 or 5 weeks
+    form_month = Column(Date, nullable=False, unique=True)  # First day of the service period (Mar/Jun/Sep/Dec)
+    service_weeks = Column(Integer, default=13)  # Total Fridays in the three-month period
     submission_deadline = Column(Date, nullable=True)
     status = Column(
         Enum('draft', 'open', 'closed', 'published', name='form_status'),
@@ -135,8 +134,8 @@ class MonthlyForm(Base):
     schedules = relationship("Schedule", back_populates="form", cascade="all, delete-orphan")
     
     __table_args__ = (
-        Index('idx_form_month', 'form_month'),
-        Index('idx_status', 'status'),
+        Index('idx_monthly_forms_form_month', 'form_month'),
+        Index('idx_monthly_forms_status', 'status'),
     )
 
 
@@ -163,9 +162,9 @@ class ServiceDate(Base):
     __table_args__ = (
         UniqueConstraint('form_id', 'service_week', name='unique_week_date'),
         UniqueConstraint('form_id', 'friday_date', name='unique_friday_per_form'),
-        Index('idx_form_id', 'form_id'),
-        Index('idx_friday_date', 'friday_date'),
-        Index('idx_is_holiday', 'is_holiday'),
+        Index('idx_service_dates_form_id', 'form_id'),
+        Index('idx_service_dates_friday_date', 'friday_date'),
+        Index('idx_service_dates_is_holiday', 'is_holiday'),
     )
 
 
@@ -193,10 +192,10 @@ class AvailabilityEntry(Base):
     
     __table_args__ = (
         UniqueConstraint('form_id', 'member_id', 'service_week', name='unique_member_form_week'),
-        Index('idx_form_id', 'form_id'),
-        Index('idx_member_id', 'member_id'),
-        Index('idx_is_available', 'is_available'),
-        Index('idx_submitted_at', 'submitted_at'),
+        Index('idx_availability_entries_form_id', 'form_id'),
+        Index('idx_availability_entries_member_id', 'member_id'),
+        Index('idx_availability_entries_is_available', 'is_available'),
+        Index('idx_availability_entries_submitted_at', 'submitted_at'),
     )
 
 
@@ -226,11 +225,11 @@ class Schedule(Base):
     
     __table_args__ = (
         UniqueConstraint('form_id', 'service_week', 'role_id', 'assignment_slot', name='unique_week_role_assignment_slot'),
-        Index('idx_form_id', 'form_id'),
-        Index('idx_member_id', 'member_id'),
-        Index('idx_role_id', 'role_id'),
-        Index('idx_week', 'service_week'),
-        Index('idx_confirmed', 'confirmed'),
+        Index('idx_schedules_form_id', 'form_id'),
+        Index('idx_schedules_member_id', 'member_id'),
+        Index('idx_schedules_role_id', 'role_id'),
+        Index('idx_schedules_week', 'service_week'),
+        Index('idx_schedules_confirmed', 'confirmed'),
     )
 
     @property
@@ -280,9 +279,9 @@ class RescheduleRequest(Base):
     )
 
     __table_args__ = (
-        Index('idx_reschedule_form_week', 'form_id', 'service_week'),
-        Index('idx_reschedule_status', 'status'),
-        Index('idx_reschedule_original_member', 'original_member_id'),
+        Index('idx_reschedule_requests_form_week', 'form_id', 'service_week'),
+        Index('idx_reschedule_requests_status', 'status'),
+        Index('idx_reschedule_requests_original_member', 'original_member_id'),
     )
 
 
@@ -303,8 +302,8 @@ class RescheduleRequestCandidate(Base):
 
     __table_args__ = (
         UniqueConstraint('request_id', 'member_id', name='unique_request_candidate_member'),
-        Index('idx_request_candidate_request', 'request_id'),
-        Index('idx_request_candidate_member', 'member_id'),
+        Index('idx_reschedule_request_candidates_request', 'request_id'),
+        Index('idx_reschedule_request_candidates_member', 'member_id'),
     )
 
 
@@ -332,10 +331,10 @@ class RoleConflict(Base):
         ForeignKeyConstraint(['role_id_1'], ['roles.role_id'], ondelete='CASCADE'),
         ForeignKeyConstraint(['role_id_2'], ['roles.role_id'], ondelete='CASCADE'),
         UniqueConstraint('role_id_1', 'role_id_2', name='unique_role_pair'),
-        Index('idx_role1', 'role_id_1'),
-        Index('idx_role2', 'role_id_2'),
-        Index('idx_is_active', 'is_active'),
-        Index('idx_conflict_type', 'conflict_type'),
+        Index('idx_role_conflicts_role1', 'role_id_1'),
+        Index('idx_role_conflicts_role2', 'role_id_2'),
+        Index('idx_role_conflicts_is_active', 'is_active'),
+        Index('idx_role_conflicts_conflict_type', 'conflict_type'),
         CheckConstraint('role_id_1 < role_id_2', name='chk_role_order'),
     )
 
@@ -430,9 +429,9 @@ class MemberWithRoles(BaseModel):
 
 
 class MonthlyFormCreate(BaseModel):
-    """Create a new monthly form"""
+    """Create a new three-month service period form"""
     form_month: date
-    service_weeks: int  # 4 or 5
+    service_weeks: Optional[int] = None
     submission_deadline: Optional[date] = None
     notes: Optional[str] = None
 

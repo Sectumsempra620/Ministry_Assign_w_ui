@@ -24,10 +24,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
+          pip install -r backend/requirements-dev.txt
 
       - name: Compile Python files
         run: |
           python -m py_compile main.py models.py backend/scheduler.py backend/rescheduler.py scripts/generate_schedule.py scripts/reschedule.py
+
+      - name: Run pytest
+        run: |
+          pytest -q
 
       - name: Check important files exist
         run: |

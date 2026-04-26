@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session, selectinload
 from sqlalchemy.pool import NullPool
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import List, Optional
 import os
 from dotenv import load_dotenv
@@ -31,25 +31,77 @@ from models import (
     RescheduleRequestCreate, RescheduleRequestResponse, ReplacementCandidateResponse,
 )
 
+PERIOD_START_MONTHS = {3, 6, 9, 12}
+
+
+def normalize_period_start(period_start: date) -> date:
+    normalized = period_start.replace(day=1)
+    if normalized.month not in PERIOD_START_MONTHS:
+        raise HTTPException(
+            status_code=400,
+            detail="Service period must start in March, June, September, or December.",
+        )
+    return normalized
+
+
+def get_period_end(period_start: date) -> date:
+    if period_start.month == 12:
+        return date(period_start.year + 1, 2, 1)
+    return date(period_start.year, period_start.month + 2, 1)
+
+
+def get_period_last_day(period_start: date) -> date:
+    if period_start.month == 12:
+        return date(period_start.year + 1, 3, 1) - timedelta(days=1)
+    return date(period_start.year, period_start.month + 3, 1) - timedelta(days=1)
+
+
+def get_period_fridays(period_start: date) -> List[date]:
+    current = period_start
+    fridays: List[date] = []
+    period_last_day = get_period_last_day(period_start)
+
+    while current <= period_last_day:
+        if current.weekday() == 4:
+            fridays.append(current)
+        current += timedelta(days=1)
+
+    return fridays
+
+
+def count_fridays_in_period(period_start: date) -> int:
+    return len(get_period_fridays(period_start))
+
+
+def format_period_label(period_start: date) -> str:
+    period_end = get_period_end(period_start)
+    if period_start.year == period_end.year:
+        return f"{period_start.strftime('%b')}–{period_end.strftime('%b %Y')}"
+    return f"{period_start.strftime('%b %Y')}–{period_end.strftime('%b %Y')}"
+
 # ============================================================================
 # DATABASE CONFIGURATION
 # ============================================================================
 
-load_dotenv(override=True)
+load_dotenv()
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "mysql+pymysql://admin:password@your-rds-endpoint:3306/church_tech_ministry"
 )
 
+engine_kwargs = {
+    "echo": True,  # Set to False in production
+    "pool_pre_ping": True,
+    "pool_recycle": 3600,
+    "poolclass": NullPool,
+}
+
+if DATABASE_URL.startswith("sqlite"):
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+
 # Create database engine and session
-engine = create_engine(
-    DATABASE_URL,
-    echo=True,  # Set to False in production
-    pool_pre_ping=True,
-    pool_recycle=3600,
-    poolclass=NullPool
-)
+engine = create_engine(DATABASE_URL, **engine_kwargs)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -354,7 +406,7 @@ def update_member(
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
     
-    update_data = member_update.dict(exclude_unset=True)
+    update_data = member_update.model_dump(exclude_unset=True)
     qualified_roles = update_data.pop("qualified_roles", None)
 
     for field, value in update_data.items():
@@ -462,22 +514,24 @@ def add_member_role(
 
 @app.post("/api/v1/forms", response_model=MonthlyFormResponse, status_code=201)
 def create_monthly_form(form: MonthlyFormCreate, db: Session = Depends(get_db)):
-    """Create a new monthly form"""
-    # Check if form already exists for this month
+    """Create a new three-month service period form"""
+    period_start = normalize_period_start(form.form_month)
+    service_weeks = count_fridays_in_period(period_start)
+
+    # Check if form already exists for this service period
     existing = db.query(MonthlyForm).filter(
-        db.func.strftime('%Y-%m', MonthlyForm.form_month) == 
-        form.form_month.strftime('%Y-%m')
+        MonthlyForm.form_month == period_start,
     ).first()
     
     if existing:
         raise HTTPException(
             status_code=400,
-            detail=f"Form for {form.form_month.strftime('%B %Y')} already exists"
+            detail=f"Service period form for {format_period_label(period_start)} already exists"
         )
     
     db_form = MonthlyForm(
-        form_month=form.form_month,
-        service_weeks=form.service_weeks,
+        form_month=period_start,
+        service_weeks=service_weeks,
         submission_deadline=form.submission_deadline,
         notes=form.notes,
         status='draft'
@@ -490,7 +544,7 @@ def create_monthly_form(form: MonthlyFormCreate, db: Session = Depends(get_db)):
 
 @app.get("/api/v1/forms", response_model=List[MonthlyFormResponse])
 def list_forms(db: Session = Depends(get_db)):
-    """List all monthly forms"""
+    """List all service period forms"""
     return db.query(MonthlyForm).order_by(MonthlyForm.form_month.desc()).all()
 
 
@@ -560,6 +614,46 @@ def create_service_date(service_date: ServiceDateCreate, db: Session = Depends(g
     return db_service_date
 
 
+@app.post("/api/v1/forms/{form_id}/generate-service-dates", response_model=List[ServiceDateResponse], status_code=201)
+def generate_service_dates(form_id: int, replace_existing: bool = True, db: Session = Depends(get_db)):
+    """Generate every Friday in the form's three-month service period."""
+    form = db.query(MonthlyForm).filter(MonthlyForm.form_id == form_id).first()
+    if not form:
+        raise HTTPException(status_code=404, detail="Form not found")
+
+    period_start = normalize_period_start(form.form_month)
+    fridays = get_period_fridays(period_start)
+
+    existing_dates = db.query(ServiceDate).filter(ServiceDate.form_id == form_id).all()
+    if existing_dates and not replace_existing:
+        raise HTTPException(
+            status_code=400,
+            detail="This service period already has Friday dates configured.",
+        )
+
+    if existing_dates:
+        db.query(ServiceDate).filter(ServiceDate.form_id == form_id).delete()
+        db.flush()
+
+    created_dates = []
+    for index, friday in enumerate(fridays, start=1):
+        service_date = ServiceDate(
+            form_id=form_id,
+            service_week=index,
+            friday_date=friday,
+        )
+        db.add(service_date)
+        created_dates.append(service_date)
+
+    form.service_weeks = len(fridays)
+    db.commit()
+
+    for service_date in created_dates:
+        db.refresh(service_date)
+
+    return created_dates
+
+
 # ============================================================================
 # AVAILABILITY ENDPOINTS
 # ============================================================================
@@ -571,7 +665,7 @@ def submit_availability(
     availability_data: dict,  # {"week_1": true, "week_2": false, ...}
     db: Session = Depends(get_db)
 ):
-    """Submit member availability for a month"""
+    """Submit member availability for a service period"""
     form = db.query(MonthlyForm).filter(MonthlyForm.form_id == form_id).first()
     if not form:
         raise HTTPException(status_code=404, detail="Form not found")
@@ -688,7 +782,8 @@ def create_schedule(schedule: ScheduleCreate, db: Session = Depends(get_db)):
         service_week=schedule.service_week,
         role_id=schedule.role_id,
         assignment_slot=assignment_slot,
-        member_id=schedule.member_id
+        member_id=schedule.member_id,
+        notes=schedule.notes,
     )
     
     try:
@@ -888,7 +983,7 @@ def auto_schedule_form(form_id: int, replace_existing: bool = False, db: Session
 
 @app.get("/api/v1/forms/{form_id}/report")
 def get_form_report(form_id: int, db: Session = Depends(get_db)):
-    """Get a comprehensive report for a form"""
+    """Get a comprehensive report for a service period form"""
     form = db.query(MonthlyForm).filter(MonthlyForm.form_id == form_id).first()
     if not form:
         raise HTTPException(status_code=404, detail="Form not found")
@@ -910,7 +1005,7 @@ def get_form_report(form_id: int, db: Session = Depends(get_db)):
     
     return {
         "form_id": form_id,
-        "form_month": form.form_month.strftime("%B %Y"),
+        "form_month": format_period_label(form.form_month),
         "status": form.status,
         "total_members": total_members,
         "submissions": submissions,

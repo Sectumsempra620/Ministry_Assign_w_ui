@@ -50,7 +50,29 @@ def _has_conflict(role_id: int, assigned_roles_for_member: set[int], conflict_pa
     return False
 
 
-def _role_group_is_valid(role: Role, assigned_members: list[Member]) -> bool:
+def _service_period_worship_skip_weeks(db: Session, form_id: int) -> set[int]:
+    service_dates = (
+        db.query(ServiceDate)
+        .filter(ServiceDate.form_id == form_id)
+        .order_by(ServiceDate.friday_date)
+        .all()
+    )
+    by_month: dict[tuple[int, int], list[ServiceDate]] = defaultdict(list)
+    for service_date in service_dates:
+        by_month[(service_date.friday_date.year, service_date.friday_date.month)].append(service_date)
+
+    skipped_weeks: set[int] = set()
+    for monthly_dates in by_month.values():
+        for service_date in sorted(monthly_dates, key=lambda item: item.friday_date)[:2]:
+            skipped_weeks.add(service_date.service_week)
+
+    return skipped_weeks
+
+
+def _role_group_is_valid(role: Role, week: int, assigned_members: list[Member], worship_leader_skip_weeks: set[int]) -> bool:
+    if role.role_name == "Worship Leader" and week in worship_leader_skip_weeks:
+        return not assigned_members
+
     if not assigned_members:
         return True
 
@@ -259,6 +281,8 @@ def _solve_week(
     if not schedules:
         return None, "No schedules found for the affected week."
 
+    worship_leader_skip_weeks = _service_period_worship_skip_weeks(db, form_id)
+
     roles = {role.role_id: role for role in db.query(Role).all()}
 
     request_by_schedule_id = {request.schedule_id: request for request in requests}
@@ -345,6 +369,10 @@ def _solve_week(
 
     candidate_members_by_slot: dict[int, list[Member]] = {}
     for index, slot in enumerate(slots):
+        if slot.role.role_name == "Worship Leader" and slot.schedule.service_week in worship_leader_skip_weeks:
+            candidate_members_by_slot[index] = []
+            continue
+
         candidates = [
             member for member in qualified_by_week_role.get((slot.schedule.service_week, slot.role.role_id), [])
             if slot.requested or member.member_id == slot.schedule.member_id or member.member_id != slot.schedule.member_id
@@ -399,6 +427,9 @@ def _solve_week(
         slot = slots[slot_index]
         week = slot.schedule.service_week
 
+        if slot.role.role_name == "Worship Leader" and week in worship_leader_skip_weeks:
+            return
+
         for member in candidate_members_by_slot[slot_index]:
             if slot.requested and member.member_id == slot.schedule.member_id:
                 continue
@@ -418,7 +449,7 @@ def _solve_week(
                 continue
 
             new_role_group = week_role_member_map[(week, slot.role.role_id)] + [member]
-            if not _role_group_is_valid(slot.role, new_role_group):
+            if not _role_group_is_valid(slot.role, week, new_role_group, worship_leader_skip_weeks):
                 continue
 
             if (

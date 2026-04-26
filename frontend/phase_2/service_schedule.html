@@ -251,18 +251,18 @@
         <section class="hero">
             <h1>Friday Service Schedule</h1>
             <p>
-                This page shows the monthly Friday service roster for everyone in the church. Choose a month to see
+                This page shows the Friday service roster for everyone in the church. Choose a service period to see
                 each service role and the assigned people for every Friday.
             </p>
         </section>
 
         <section class="selector-card">
-            <label for="monthSelect">Choose a month</label>
+            <label for="monthSelect">Choose a service period</label>
             <select id="monthSelect">
-                <option value="">Loading months...</option>
+                <option value="">Loading service periods...</option>
             </select>
-            <div class="helper">All created monthly forms are listed here. The table updates when you choose a month.</div>
-            <div id="status" class="status">Loading available months...</div>
+            <div class="helper">All created service periods are listed here. The table updates when you choose one.</div>
+            <div id="status" class="status">Loading available service periods...</div>
             <div id="summary" class="summary"></div>
         </section>
 
@@ -287,11 +287,24 @@
             return new Date(`${dateString}T00:00:00`);
         }
 
-        function formatMonth(dateString) {
-            return parseLocalDate(dateString).toLocaleDateString("en-US", {
-                month: "long",
-                year: "numeric"
-            });
+        function formatPeriod(dateString) {
+            const start = parseLocalDate(dateString);
+            const end = new Date(start);
+            end.setMonth(end.getMonth() + 2);
+            const sameYear = start.getFullYear() === end.getFullYear();
+            const startLabel = start.toLocaleDateString("en-US", { month: "short", ...(sameYear ? {} : { year: "numeric" }) });
+            const endLabel = end.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+            return `${startLabel} - ${endLabel}`;
+        }
+
+        function isOtherFellowshipWorshipFriday(serviceDate) {
+            const fridayDate = parseLocalDate(serviceDate.friday_date);
+            const monthDates = window.currentServiceDates.filter((item) => {
+                const candidate = parseLocalDate(item.friday_date);
+                return candidate.getFullYear() === fridayDate.getFullYear() && candidate.getMonth() === fridayDate.getMonth();
+            }).sort((a, b) => parseLocalDate(a.friday_date) - parseLocalDate(b.friday_date));
+
+            return monthDates.slice(0, 2).some((item) => item.service_week === serviceDate.service_week);
         }
 
         function formatFriday(dateString) {
@@ -313,8 +326,8 @@
             const assignedPeople = new Set(schedules.map((item) => item.member_id));
             summary.innerHTML = `
                 <div class="summary-item">
-                    <strong>Month</strong>
-                    <span>${formatMonth(form.form_month)}</span>
+                    <strong>Service Period</strong>
+                    <span>${formatPeriod(form.form_month)}</span>
                 </div>
                 <div class="summary-item">
                     <strong>Status</strong>
@@ -374,7 +387,7 @@
                                 }).join("")}
                             </div>
                         `;
-                    } else if (index === 0 && role.role_name === "Worship Leader") {
+                    } else if (role.role_name === "Worship Leader" && isOtherFellowshipWorshipFriday(serviceDate)) {
                         content = `<span class="special-text">Other fellowship</span>`;
                     } else {
                         content = `<span class="empty-text">—</span>`;
@@ -409,13 +422,13 @@
 
             const select = document.getElementById("monthSelect");
             if (forms.length === 0) {
-                select.innerHTML = `<option value="">No months available</option>`;
-                setStatus("No monthly form is available yet.", true);
+                select.innerHTML = `<option value="">No service periods available</option>`;
+                setStatus("No service period form is available yet.", true);
                 return;
             }
 
             select.innerHTML = forms.map((form, index) => `
-                <option value="${form.form_id}" ${index === 0 ? "selected" : ""}>${formatMonth(form.form_month)}</option>
+                <option value="${form.form_id}" ${index === 0 ? "selected" : ""}>${formatPeriod(form.form_month)}</option>
             `).join("");
         }
 
@@ -440,6 +453,7 @@
 
                 const serviceDates = await serviceDatesResponse.json();
                 const schedules = await schedulesResponse.json();
+                window.currentServiceDates = serviceDates;
 
                 renderSummary(selectedForm, serviceDates, schedules);
                 renderScheduleTable(selectedForm, serviceDates, schedules);

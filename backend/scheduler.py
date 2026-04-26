@@ -25,6 +25,19 @@ class SchedulingResult:
     gaps: list[SchedulingGap]
 
 
+def _worship_leader_skip_weeks(service_dates: list[ServiceDate]) -> set[int]:
+    by_month: dict[tuple[int, int], list[ServiceDate]] = defaultdict(list)
+    for service_date in service_dates:
+        by_month[(service_date.friday_date.year, service_date.friday_date.month)].append(service_date)
+
+    skipped_weeks: set[int] = set()
+    for monthly_dates in by_month.values():
+        for service_date in sorted(monthly_dates, key=lambda item: item.friday_date)[:2]:
+            skipped_weeks.add(service_date.service_week)
+
+    return skipped_weeks
+
+
 def _candidate_sort_key(
     member: Member,
     total_assignments: dict[int, int],
@@ -371,7 +384,7 @@ def generate_schedule(form_id: int, db: Session, replace_existing: bool = False)
     created: list[Schedule] = []
     gaps: list[SchedulingGap] = []
 
-    first_service_week = min(service_date.service_week for service_date in service_dates)
+    worship_leader_skip_weeks = _worship_leader_skip_weeks(service_dates)
 
     for service_date in service_dates:
         week = service_date.service_week
@@ -395,7 +408,7 @@ def generate_schedule(form_id: int, db: Session, replace_existing: bool = False)
         )
 
         for role in roles_in_priority:
-            if week == first_service_week and role.role_name == "Worship Leader":
+            if week in worship_leader_skip_weeks and role.role_name == "Worship Leader":
                 continue
 
             candidates = role_candidates[role.role_id]

@@ -303,7 +303,7 @@
         <section class="hero">
             <h1>Friday Availability Collection</h1>
             <p>
-                Members first choose who they are and which month they want to fill out. Then the form opens with each
+                Members first choose who they are and which service period they want to fill out. Then the form opens with each
                 Friday's actual date so they can answer yes or no for every service.
             </p>
         </section>
@@ -318,11 +318,11 @@
                     <div class="helper">This dropdown will show active members from the database.</div>
                 </div>
                 <div>
-                    <label for="monthSelect">Which month are you filling out?</label>
+                    <label for="monthSelect">Which service period are you filling out?</label>
                     <select id="monthSelect">
-                        <option value="">Select a month</option>
+                        <option value="">Select a service period</option>
                     </select>
-                    <div class="helper">Only forms already created by the admin will appear here.</div>
+                    <div class="helper">Only service periods already created by the admin will appear here.</div>
                 </div>
             </div>
 
@@ -330,7 +330,7 @@
                 <button id="openFormBtn" type="button" class="btn-primary">Open Availability Form</button>
             </div>
 
-            <div id="pageStatus" class="status">Choose your name and month to begin.</div>
+            <div id="pageStatus" class="status">Choose your name and service period to begin.</div>
             <div id="selectionSummary" class="summary hidden"></div>
         </section>
     </div>
@@ -375,11 +375,14 @@
             return new Date(`${dateString}T00:00:00`);
         }
 
-        function formatMonth(dateString) {
-            return parseLocalDate(dateString).toLocaleDateString("en-US", {
-                month: "long",
-                year: "numeric"
-            });
+        function formatPeriod(dateString) {
+            const start = parseLocalDate(dateString);
+            const end = new Date(start);
+            end.setMonth(end.getMonth() + 2);
+            const sameYear = start.getFullYear() === end.getFullYear();
+            const startLabel = start.toLocaleDateString("en-US", { month: "short", ...(sameYear ? {} : { year: "numeric" }) });
+            const endLabel = end.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+            return `${startLabel} - ${endLabel}`;
         }
 
         function formatFriday(dateString) {
@@ -400,8 +403,8 @@
                     <span>${member.member_name}</span>
                 </div>
                 <div class="summary-item">
-                    <strong>Month</strong>
-                    <span>${formatMonth(form.form_month)}</span>
+                    <strong>Service Period</strong>
+                    <span>${formatPeriod(form.form_month)}</span>
                 </div>
                 <div class="summary-item">
                     <strong>Status</strong>
@@ -423,14 +426,14 @@
 
         function populateMonthSelect() {
             const select = document.getElementById("monthSelect");
-            select.innerHTML = '<option value="">Select a month</option>' + forms.map((form) => `
-                <option value="${form.form_id}">${formatMonth(form.form_month)}</option>
+            select.innerHTML = '<option value="">Select a service period</option>' + forms.map((form) => `
+                <option value="${form.form_id}">${formatPeriod(form.form_month)}</option>
             `).join("");
         }
 
         async function loadMembersAndForms() {
             try {
-                setPageStatus("Loading members and months...");
+                setPageStatus("Loading members and service periods...");
 
                 const [membersResponse, formsResponse] = await Promise.all([
                     fetch(`${API_BASE}/members?is_active=true`),
@@ -438,7 +441,7 @@
                 ]);
 
                 if (!membersResponse.ok || !formsResponse.ok) {
-                    throw new Error("Unable to load members or monthly forms.");
+                    throw new Error("Unable to load members or service period forms.");
                 }
 
                 members = await membersResponse.json();
@@ -446,7 +449,7 @@
 
                 populateMemberSelect();
                 populateMonthSelect();
-                setPageStatus("Choose your name and month to begin.");
+                setPageStatus("Choose your name and service period to begin.");
             } catch (error) {
                 setPageStatus(error.message, "error");
             }
@@ -498,12 +501,12 @@
             const { member, form } = getSelectedEntities();
 
             if (!member || !form) {
-                setPageStatus("Please choose both your name and the month first.", "error");
+                setPageStatus("Please choose both your name and the service period first.", "error");
                 return;
             }
 
             try {
-                setPageStatus("Loading Friday dates for the selected month...");
+                setPageStatus("Loading Friday dates for the selected service period...");
                 renderSelectionSummary(member, form);
 
                 const [serviceDatesResponse, availabilityResponse] = await Promise.all([
@@ -520,11 +523,11 @@
                 const memberEntries = allEntries.filter((entry) => entry.member_id === member.member_id);
 
                 if (serviceDates.length === 0) {
-                    throw new Error("This month does not have Friday dates configured yet.");
+                    throw new Error("This service period does not have Friday dates configured yet.");
                 }
 
                 activeSelection = { member, form, serviceDates };
-                document.getElementById("modalTitle").textContent = `${member.member_name} • ${formatMonth(form.form_month)}`;
+                document.getElementById("modalTitle").textContent = `${member.member_name} • ${formatPeriod(form.form_month)}`;
                 document.getElementById("modalSubtitle").textContent = "Answer yes or no for each Friday service date below.";
                 document.getElementById("notes").value = memberEntries.find((entry) => entry.notes)?.notes || "";
                 renderWeekChoices(serviceDates, memberEntries);
