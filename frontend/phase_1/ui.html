@@ -5,6 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Church Service Scheduling</title>
     <style>
+        :root {
+            --bg-top: #dfe9ff;
+            --bg-bottom: #f7faff;
+            --panel: rgba(255, 255, 255, 0.97);
+            --panel-soft: #eef4ff;
+            --border: #c8d6f3;
+            --text: #1f2a44;
+            --muted: #5e6d8c;
+            --accent: #5f7df0;
+            --accent-dark: #4664d5;
+            --accent-soft: #7d90b6;
+            --accent-soft-dark: #67799d;
+            --danger: #d45757;
+            --danger-dark: #ba3f3f;
+            --shadow: 0 12px 30px rgba(83, 111, 181, 0.14);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,7 +30,10 @@
         
         body {
             font-family: Georgia, "Times New Roman", serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(116, 151, 243, 0.22), transparent 28%),
+                linear-gradient(180deg, var(--bg-top) 0%, #edf3ff 36%, var(--bg-bottom) 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -24,21 +44,22 @@
         }
         
         header {
-            background: white;
+            background: var(--panel);
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
             margin-bottom: 30px;
             text-align: center;
         }
         
         header h1 {
-            color: #333;
+            color: var(--text);
             margin-bottom: 10px;
         }
         
         header p {
-            color: #666;
+            color: var(--muted);
         }
         
         .main {
@@ -55,16 +76,17 @@
         }
         
         .card {
-            background: white;
+            background: var(--panel);
             padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
         }
         
         .card h2 {
-            color: #333;
+            color: var(--text);
             margin-bottom: 20px;
-            border-bottom: 2px solid #667eea;
+            border-bottom: 2px solid var(--border);
             padding-bottom: 10px;
         }
         
@@ -74,7 +96,7 @@
 
         .helper-text {
             margin-top: 6px;
-            color: #666;
+            color: var(--muted);
             font-size: 12px;
             line-height: 1.5;
         }
@@ -82,31 +104,33 @@
         label {
             display: block;
             margin-bottom: 5px;
-            color: #333;
+            color: var(--text);
             font-weight: 500;
         }
         
         input, select, textarea {
             width: 100%;
             padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
             font-size: 14px;
             font-family: inherit;
+            background: #fffdf8;
+            color: var(--text);
         }
         
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(141, 95, 47, 0.12);
         }
         
         button {
-            background: #667eea;
+            background: var(--accent);
             color: white;
             padding: 12px 24px;
             border: none;
-            border-radius: 5px;
+            border-radius: 12px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
@@ -114,9 +138,9 @@
         }
         
         button:hover {
-            background: #5568d3;
+            background: var(--accent-dark);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 18px rgba(70, 100, 213, 0.24);
         }
         
         button:active {
@@ -124,19 +148,20 @@
         }
         
         .btn-secondary {
-            background: #6c757d;
+            background: var(--accent-soft);
+            color: var(--text);
         }
         
         .btn-secondary:hover {
-            background: #5a6268;
+            background: var(--accent-soft-dark);
         }
         
         .btn-danger {
-            background: #dc3545;
+            background: var(--danger);
         }
         
         .btn-danger:hover {
-            background: #c82333;
+            background: var(--danger-dark);
         }
         
         .list-container {
@@ -146,11 +171,12 @@
         }
         
         .list-item {
-            background: #f8f9fa;
+            background: #fffdf8;
             padding: 15px;
             margin-bottom: 10px;
-            border-radius: 5px;
-            border-left: 4px solid #667eea;
+            border-radius: 14px;
+            border: 1px solid #dbe5fb;
+            border-left: 4px solid var(--accent);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -162,11 +188,11 @@
         
         .list-item-title {
             font-weight: 600;
-            color: #333;
+            color: var(--text);
         }
         
         .list-item-subtitle {
-            color: #666;
+            color: var(--muted);
             font-size: 12px;
             margin-top: 5px;
         }
@@ -179,6 +205,44 @@
         .list-item-actions button {
             padding: 6px 12px;
             font-size: 12px;
+        }
+
+        .form-detail {
+            margin-top: 14px;
+            padding: 14px;
+            border: 1px solid #dbe5fb;
+            border-radius: 12px;
+            background: #f9fbff;
+        }
+
+        .form-detail-title {
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .member-chip-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .member-chip {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #e7efff;
+            border: 1px solid #bfd0f8;
+            font-size: 12px;
+            font-weight: 600;
+            color: #3450a3;
+        }
+
+        .inline-note {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
         }
         
         .alert {
@@ -209,23 +273,31 @@
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
-            border-bottom: 2px solid #ddd;
+            border-bottom: 2px solid var(--border);
         }
         
         .tab-btn {
-            background: none;
+            background: transparent;
             border: none;
             padding: 10px 20px;
             cursor: pointer;
-            border-bottom: 2px solid transparent;
-            color: #666;
+            border-radius: 12px 12px 0 0;
+            border-bottom: 3px solid transparent;
+            color: var(--muted);
             font-weight: 600;
             transition: all 0.3s ease;
         }
+
+        .tab-btn:hover {
+            background: rgba(95, 125, 240, 0.1);
+            box-shadow: none;
+            transform: none;
+        }
         
         .tab-btn.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
+            color: var(--accent-dark);
+            background: rgba(95, 125, 240, 0.12);
+            border-bottom-color: var(--accent);
         }
         
         .tab-content {
@@ -245,8 +317,8 @@
         }
         
         .badge-primary {
-            background: #cfe2ff;
-            color: #084298;
+            background: #dfe9ff;
+            color: var(--accent-dark);
         }
         
         .badge-success {
@@ -261,7 +333,7 @@
         
         .spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border-top: 4px solid var(--accent);
             border-radius: 50%;
             width: 20px;
             height: 20px;
@@ -484,8 +556,10 @@
     <script>
         const API_BASE = `${window.location.origin.replace(':8001', ':8000')}/api/v1`;
         const HEALTH_URL = `${window.location.origin.replace(':8001', ':8000')}/health`;
-        const ADMIN_PASSWORD = "Cjsy1361";
+        const ADMIN_PASSWORD = "Xinwangai63017";
         const ADMIN_SESSION_KEY = "church_admin_authenticated";
+        let activeMembersCache = [];
+        const formAvailabilityCache = {};
 
         function showApp() {
             document.getElementById('authOverlay').classList.add('hidden');
@@ -668,6 +742,7 @@
             try {
                 const response = await fetch(`${API_BASE}/members?is_active=true`);
                 const members = await response.json();
+                activeMembersCache = members;
                 const membersList = document.getElementById('membersList');
                 
                 if (members.length === 0) {
@@ -773,6 +848,15 @@
             return error.message || JSON.stringify(error);
         }
 
+        function escapeHtml(value) {
+            return String(value)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
         // Load Forms
         async function loadForms() {
             try {
@@ -807,8 +891,18 @@
                             <button type="button" class="btn-secondary" onclick="generateFridays(${f.form_id}, '${formatPeriodLabel(f.form_month).replace(/'/g, "\\'")}')">
                                 Generate Fridays
                             </button>
+                            <button type="button" class="btn-secondary" onclick="toggleAvailabilitySummary(${f.form_id}, '${formatPeriodLabel(f.form_month).replace(/'/g, "\\'")}')">
+                                View Availability
+                            </button>
+                            <button type="button" onclick="runAutoSchedule(${f.form_id}, '${formatPeriodLabel(f.form_month).replace(/'/g, "\\'")}')">
+                                Run Schedule
+                            </button>
+                            <button type="button" class="btn-secondary" onclick="runReschedule(${f.form_id}, '${formatPeriodLabel(f.form_month).replace(/'/g, "\\'")}')">
+                                Run Reschedule
+                            </button>
                         </div>
                     </div>
+                    <div id="availability-detail-${f.form_id}" class="form-detail" style="display: none;"></div>
                 `).join('');
                 
                 document.getElementById('totalForms').textContent = forms.length;
@@ -857,6 +951,104 @@
                     const error = await response.json();
                     alert(`✗ Error: ${formatApiError(error)}`);
                 }
+            } catch (error) {
+                alert(`✗ Error: ${error.message}`);
+            }
+        }
+
+        async function toggleAvailabilitySummary(formId, periodLabel) {
+            const detail = document.getElementById(`availability-detail-${formId}`);
+            if (detail.style.display === 'block') {
+                detail.style.display = 'none';
+                return;
+            }
+
+            detail.style.display = 'block';
+            detail.innerHTML = `<div class="inline-note"><span class="spinner"></span> Loading availability for ${periodLabel}...</div>`;
+
+            try {
+                let entries = formAvailabilityCache[formId];
+                if (!entries) {
+                    const response = await fetch(`${API_BASE}/forms/${formId}/availability`);
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(formatApiError(error));
+                    }
+                    entries = await response.json();
+                    formAvailabilityCache[formId] = entries;
+                }
+
+                const submittedMemberIds = [...new Set(
+                    entries
+                        .filter((entry) => entry.submitted_at)
+                        .map((entry) => entry.member_id)
+                )];
+                const submittedMembers = submittedMemberIds
+                    .map((memberId) => activeMembersCache.find((member) => member.member_id === memberId))
+                    .filter(Boolean)
+                    .sort((a, b) => a.member_name.localeCompare(b.member_name));
+                const totalMembers = activeMembersCache.length;
+
+                detail.innerHTML = `
+                    <div class="form-detail-title">Availability Submitted for ${periodLabel}</div>
+                    <div class="inline-note">
+                        ${submittedMembers.length} out of ${totalMembers} member(s) have submitted availability for this service period.
+                    </div>
+                    ${
+                        submittedMembers.length > 0
+                            ? `<div class="member-chip-wrap">
+                                ${submittedMembers.map((member) => `<span class="member-chip">${escapeHtml(member.member_name)}</span>`).join('')}
+                               </div>`
+                            : `<div class="inline-note" style="margin-top: 10px;">No one has submitted availability yet.</div>`
+                    }
+                `;
+            } catch (error) {
+                detail.innerHTML = `<div class="alert alert-error">✗ Error: ${escapeHtml(error.message)}</div>`;
+            }
+        }
+
+        async function runAutoSchedule(formId, periodLabel) {
+            if (!confirm(`Run auto-schedule for ${periodLabel}? This will regenerate the schedule for this service period.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/forms/${formId}/auto-schedule?replace_existing=true`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(formatApiError(error));
+                }
+
+                const result = await response.json();
+                const gapCount = result.gaps ? result.gaps.length : 0;
+                alert(`✓ Auto-schedule finished for ${periodLabel}.\nCreated assignments: ${result.created_count}\nOpen gaps: ${gapCount}`);
+            } catch (error) {
+                alert(`✗ Error: ${error.message}`);
+            }
+        }
+
+        async function runReschedule(formId, periodLabel) {
+            if (!confirm(`Run reschedule for ${periodLabel}? This will process all open replacement requests for this service period.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/forms/${formId}/reschedule`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(formatApiError(error));
+                }
+
+                const result = await response.json();
+                const appliedWeeks = result.applied_weeks ? result.applied_weeks.length : 0;
+                const unresolvedWeeks = result.unresolved_weeks ? result.unresolved_weeks.length : 0;
+                alert(`✓ Reschedule finished for ${periodLabel}.\nApplied weeks: ${appliedWeeks}\nUnresolved weeks: ${unresolvedWeeks}`);
             } catch (error) {
                 alert(`✗ Error: ${error.message}`);
             }

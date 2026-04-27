@@ -177,9 +177,9 @@
             font-size: 16px;
         }
 
-        .role-col {
-            width: 220px;
-            min-width: 220px;
+        .time-col {
+            width: 240px;
+            min-width: 240px;
             font-weight: 700;
             background: #fcf6e8;
         }
@@ -252,7 +252,7 @@
             <h1>Friday Service Schedule</h1>
             <p>
                 This page shows the Friday service roster for everyone in the church. Choose a service period to see
-                each service role and the assigned people for every Friday.
+                each Friday and the assigned people for every service role.
             </p>
         </section>
 
@@ -353,18 +353,17 @@
 
             head.innerHTML = `
                 <tr>
-                    <th class="role-col">Service Role</th>
-                    ${serviceDates.map((serviceDate) => `
+                    <th class="time-col">Friday</th>
+                    ${roles.map((role) => `
                         <th>
-                            <span class="date-label">${formatFriday(serviceDate.friday_date)}</span>
-                            <span class="date-subtitle">Week ${serviceDate.service_week}${serviceDate.notes ? ` • ${serviceDate.notes}` : ""}</span>
+                            <span class="date-label">${role.role_name}</span>
                         </th>
                     `).join("")}
                 </tr>
             `;
 
-            body.innerHTML = roles.map((role) => {
-                const cells = serviceDates.map((serviceDate, index) => {
+            body.innerHTML = serviceDates.map((serviceDate) => {
+                const cells = roles.map((role) => {
                     const entries = schedules.filter((schedule) =>
                         schedule.role_id === role.role_id && schedule.service_week === serviceDate.service_week
                     );
@@ -398,7 +397,10 @@
 
                 return `
                     <tr>
-                        <td class="role-col">${role.role_name}</td>
+                        <td class="time-col">
+                            <span class="date-label">${formatFriday(serviceDate.friday_date)}</span>
+                            <span class="date-subtitle">Week ${serviceDate.service_week}${serviceDate.notes ? ` • ${serviceDate.notes}` : ""}</span>
+                        </td>
                         ${cells}
                     </tr>
                 `;

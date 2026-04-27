@@ -232,53 +232,89 @@
             line-height: 1.6;
         }
 
+        .modal-header p.emphasis {
+            color: var(--accent-dark);
+            font-weight: 700;
+            font-size: 17px;
+        }
+
+        .modal-header p.translation {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .keyword-highlight {
+            display: inline-block;
+            padding: 1px 8px;
+            border-radius: 999px;
+            background: #f7d7d7;
+            color: #8f2c2c;
+            font-weight: 800;
+        }
+
         .week-list {
             display: grid;
-            gap: 14px;
+            gap: 12px;
             margin: 18px 0;
         }
 
         .week-card {
             border: 1px solid var(--border);
             border-radius: 18px;
-            padding: 18px;
+            padding: 16px 18px;
             background: #fffdf8;
         }
 
-        .week-card h3 {
+        .week-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .week-row input[type="checkbox"] {
+            margin: 2px 0 0;
+            width: auto;
+            transform: scale(1.15);
+        }
+
+        .week-main {
+            flex: 1;
+        }
+
+        .week-title {
             margin: 0 0 4px;
-            font-size: 22px;
+            font-size: 20px;
+            font-weight: 700;
         }
 
         .week-date {
             color: var(--muted);
-            margin-bottom: 14px;
             line-height: 1.5;
         }
 
-        .week-options {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
+        .reason-panel {
+            margin-top: 12px;
+            margin-left: 34px;
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px dashed var(--border);
+            background: #fffaf0;
         }
 
-        .choice {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
-            border-radius: 999px;
-            background: #fff8ea;
-        }
-
-        .choice input {
-            margin: 0;
+        .reason-panel label {
+            margin-bottom: 6px;
+            font-size: 14px;
         }
 
         textarea {
             min-height: 120px;
             resize: vertical;
+        }
+
+        .reason-panel textarea {
+            min-height: 90px;
         }
 
         @media (max-width: 640px) {
@@ -304,7 +340,7 @@
             <h1>Friday Availability Collection</h1>
             <p>
                 Members first choose who they are and which service period they want to fill out. Then the form opens with each
-                Friday's actual date so they can answer yes or no for every service.
+                Friday's actual date so they can simply mark which weeks they cannot attend.
             </p>
         </section>
 
@@ -340,16 +376,14 @@
             <div class="modal-header">
                 <div>
                     <h2 id="modalTitle">Availability Form</h2>
-                    <p id="modalSubtitle">Select yes or no for each Friday.</p>
+                    <p id="modalSubtitle">Select the weeks in this service period that you cannot join the fellowship.</p>
+                    <p id="modalSubtitleZh" class="translation"></p>
                 </div>
                 <button id="closeModalBtn" type="button" class="btn-secondary">Close</button>
             </div>
 
             <form id="availabilityForm">
                 <div id="weekList" class="week-list"></div>
-
-                <label for="notes">Notes for the admin team</label>
-                <textarea id="notes" placeholder="Optional note about travel, serving constraints, or special dates."></textarea>
 
                 <div class="actions">
                     <button type="submit" class="btn-primary">Submit Availability</button>
@@ -471,27 +505,52 @@
             document.getElementById("formModal").classList.add("hidden");
         }
 
+        function toggleReasonPanel(week) {
+            const checkbox = document.getElementById(`week_unavailable_${week}`);
+            const panel = document.getElementById(`week_reason_panel_${week}`);
+            if (!checkbox || !panel) return;
+            panel.classList.toggle("hidden", !checkbox.checked);
+        }
+
         function renderWeekChoices(serviceDates, existingEntries) {
-            const existingMap = new Map(existingEntries.map((entry) => [entry.service_week, entry.is_available]));
+            const existingMap = new Map(existingEntries.map((entry) => [entry.service_week, entry]));
             const weekList = document.getElementById("weekList");
+            const startDate = formatFriday(serviceDates[0].friday_date);
+            const endDate = formatFriday(serviceDates[serviceDates.length - 1].friday_date);
+            const subtitle = document.getElementById("modalSubtitle");
+            const subtitleZh = document.getElementById("modalSubtitleZh");
+
+            subtitle.innerHTML = `Select weeks in ${startDate} - ${endDate} that you <span class="keyword-highlight">cannot</span> join the fellowship.`;
+            subtitle.classList.add("emphasis");
+            subtitleZh.innerHTML = `请选择 ${startDate} 到 ${endDate} 之间你<span class="keyword-highlight">不能</span>来参加团契的周次。`;
 
             weekList.innerHTML = serviceDates.map((serviceDate) => `
                 <div class="week-card">
-                    <h3>Friday ${serviceDate.service_week}</h3>
-                    <div class="week-date">
-                        ${formatFriday(serviceDate.friday_date)}
-                        ${serviceDate.is_holiday ? " • Holiday service" : ""}
-                        ${serviceDate.notes ? ` • ${serviceDate.notes}` : ""}
+                    <div class="week-row">
+                        <input
+                            type="checkbox"
+                            id="week_unavailable_${serviceDate.service_week}"
+                            ${existingMap.get(serviceDate.service_week)?.is_available === false ? "checked" : ""}
+                            onchange="toggleReasonPanel(${serviceDate.service_week})"
+                        >
+                        <div class="week-main">
+                            <div class="week-title">Week ${serviceDate.service_week}</div>
+                            <div class="week-date">
+                                ${formatFriday(serviceDate.friday_date)}
+                                ${serviceDate.is_holiday ? " • Holiday service" : ""}
+                                ${serviceDate.notes ? ` • ${serviceDate.notes}` : ""}
+                            </div>
+                        </div>
                     </div>
-                    <div class="week-options">
-                        <label class="choice">
-                            <input type="radio" name="week_${serviceDate.service_week}" value="true" ${existingMap.get(serviceDate.service_week) === true ? "checked" : ""}>
-                            Yes, I can serve
-                        </label>
-                        <label class="choice">
-                            <input type="radio" name="week_${serviceDate.service_week}" value="false" ${existingMap.get(serviceDate.service_week) === false ? "checked" : ""}>
-                            No, I am unavailable
-                        </label>
+                    <div
+                        id="week_reason_panel_${serviceDate.service_week}"
+                        class="reason-panel ${existingMap.get(serviceDate.service_week)?.is_available === false ? "" : "hidden"}"
+                    >
+                        <label for="week_reason_${serviceDate.service_week}">Optional reason</label>
+                        <textarea
+                            id="week_reason_${serviceDate.service_week}"
+                            placeholder="Optional: travel, family reason, work conflict, serving elsewhere, etc."
+                        >${existingMap.get(serviceDate.service_week)?.notes || ""}</textarea>
                     </div>
                 </div>
             `).join("");
@@ -528,8 +587,6 @@
 
                 activeSelection = { member, form, serviceDates };
                 document.getElementById("modalTitle").textContent = `${member.member_name} • ${formatPeriod(form.form_month)}`;
-                document.getElementById("modalSubtitle").textContent = "Answer yes or no for each Friday service date below.";
-                document.getElementById("notes").value = memberEntries.find((entry) => entry.notes)?.notes || "";
                 renderWeekChoices(serviceDates, memberEntries);
                 openModal();
                 setPageStatus("Availability form opened. Submit when you're done.");
@@ -546,15 +603,13 @@
                 return;
             }
 
-            const payload = {
-                notes: document.getElementById("notes").value || null
-            };
+            const payload = {};
 
             activeSelection.serviceDates.forEach((serviceDate) => {
-                const selected = document.querySelector(`input[name="week_${serviceDate.service_week}"]:checked`);
-                if (selected) {
-                    payload[`week_${serviceDate.service_week}`] = selected.value === "true";
-                }
+                const isUnavailable = document.getElementById(`week_unavailable_${serviceDate.service_week}`)?.checked;
+                const reason = document.getElementById(`week_reason_${serviceDate.service_week}`)?.value?.trim() || null;
+                payload[`week_${serviceDate.service_week}`] = !isUnavailable;
+                payload[`week_reason_${serviceDate.service_week}`] = isUnavailable ? reason : null;
             });
 
             try {

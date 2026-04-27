@@ -681,6 +681,8 @@ def submit_availability(
     for week_num in range(1, form.service_weeks + 1):
         week_key = f"week_{week_num}"
         if week_key in availability_data:
+            week_reason_key = f"week_reason_{week_num}"
+            week_reason = availability_data.get(week_reason_key) or None
             # Get or create entry
             entry = db.query(AvailabilityEntry).filter(
                 AvailabilityEntry.form_id == form_id,
@@ -694,11 +696,13 @@ def submit_availability(
                     member_id=member_id,
                     service_week=week_num,
                     is_available=availability_data[week_key],
+                    notes=week_reason,
                     submitted_at=datetime.utcnow()
                 )
                 db.add(entry)
             else:
                 entry.is_available = availability_data[week_key]
+                entry.notes = week_reason
                 entry.submitted_at = datetime.utcnow()
             
             entries.append(entry)

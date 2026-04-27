@@ -89,6 +89,10 @@ def _role_group_is_valid(role: Role, week: int, assigned_members: list[Member], 
         study_groups = {member.bible_study_group for member in assigned_members}
         return study_groups == {"group_a", "group_b"}
 
+    if role.role_name == "Cleaner" and role.people_needed == 4 and len(assigned_members) == 4:
+        genders = [member.member_gender for member in assigned_members]
+        return genders.count("male") == 2 and genders.count("female") == 2
+
     return True
 
 
@@ -284,6 +288,9 @@ def _solve_week(
     worship_leader_skip_weeks = _service_period_worship_skip_weeks(db, form_id)
 
     roles = {role.role_id: role for role in db.query(Role).all()}
+    role_by_name = {role.role_name: role for role in roles.values()}
+    cleaning_leader_role = role_by_name.get("Cleaning Leader")
+    cleaner_role = role_by_name.get("Cleaner")
 
     request_by_schedule_id = {request.schedule_id: request for request in requests}
     absent_member_ids_by_week: dict[int, set[int]] = defaultdict(set)
@@ -317,6 +324,11 @@ def _solve_week(
                 continue
             if member.member_id in available_by_week[scope_week]:
                 qualified_by_week_role[(scope_week, qualification.role_id)].append(member)
+
+    cleaning_leader_qualified_ids = {
+        member.member_id
+        for member in qualified_by_week_role.get((week, cleaning_leader_role.role_id), [])
+    } if cleaning_leader_role else set()
 
     monthly_assignment_counts = {
         member_id: count
@@ -377,6 +389,13 @@ def _solve_week(
             member for member in qualified_by_week_role.get((slot.schedule.service_week, slot.role.role_id), [])
             if slot.requested or member.member_id == slot.schedule.member_id or member.member_id != slot.schedule.member_id
         ]
+        if slot.role.role_name == "Cleaning Leader" and not candidates:
+            candidates = [
+                member for member in active_members
+                if member.member_gender == "male"
+                and member.member_id not in absent_member_ids_by_week[slot.schedule.service_week]
+                and member.member_id in available_by_week[slot.schedule.service_week]
+            ]
         if not slot.requested and slot.schedule.member_id not in {member.member_id for member in candidates}:
             current_member = db.query(Member).filter(Member.member_id == slot.schedule.member_id).first()
             if current_member:
@@ -403,6 +422,31 @@ def _solve_week(
     best_assignment: Optional[dict[int, Member]] = None
     best_cost: Optional[int] = None
 
+    def cleaner_leader_fallback_is_valid(assignment_by_slot_index: dict[int, Member]) -> bool:
+        if not cleaning_leader_role or not cleaner_role:
+            return True
+
+        cleaner_members_by_week: dict[int, list[Member]] = defaultdict(list)
+        cleaning_leader_members_by_week: dict[int, list[Member]] = defaultdict(list)
+
+        for index, member in assignment_by_slot_index.items():
+            slot = slots[index]
+            if slot.role.role_name == "Cleaner":
+                cleaner_members_by_week[slot.schedule.service_week].append(member)
+            elif slot.role.role_name == "Cleaning Leader":
+                cleaning_leader_members_by_week[slot.schedule.service_week].append(member)
+
+        for scoped_week, cleaning_leader_members in cleaning_leader_members_by_week.items():
+            for member in cleaning_leader_members:
+                if member.member_id in cleaning_leader_qualified_ids:
+                    continue
+                if member.member_gender != "male":
+                    return False
+                if member.member_id not in {cleaner.member_id for cleaner in cleaner_members_by_week.get(scoped_week, [])}:
+                    return False
+
+        return True
+
     def search(
         depth: int,
         assignment_by_slot_index: dict[int, Member],
@@ -419,6 +463,8 @@ def _solve_week(
             return
 
         if depth == len(slot_order):
+            if not cleaner_leader_fallback_is_valid(assignment_by_slot_index):
+                return
             best_assignment = dict(assignment_by_slot_index)
             best_cost = total_cost
             return
@@ -479,6 +525,10 @@ def _solve_week(
                 monthly_assignment_counts,
                 current_scope_assignments_by_week_member,
             )
+            if slot.role.role_name == "Cleaner" and member.member_id in cleaning_leader_qualified_ids:
+                incremental_cost -= 2
+            if slot.role.role_name == "Cleaning Leader" and member.member_id not in cleaning_leader_qualified_ids:
+                incremental_cost += 25
             search(
                 depth + 1,
                 assignment_by_slot_index,
